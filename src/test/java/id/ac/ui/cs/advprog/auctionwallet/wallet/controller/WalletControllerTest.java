@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.auctionwallet.wallet.controller;
 
+import id.ac.ui.cs.advprog.auctionwallet.wallet.config.GatewaySecretInterceptor;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.exception.GlobalExceptionHandler;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.exception.InsufficientBalanceException;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.model.Wallet;
@@ -8,8 +9,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -24,6 +27,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = WalletController.class)
+@Import(GatewaySecretInterceptor.class)
+@TestPropertySource(properties = {"gateway.secret=local-dev-gateway-secret"})
 @SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "PMD.AvoidDuplicateLiterals", "PMD.UnitTestContainsTooManyAsserts", "PMD.UnitTestAssertionsShouldIncludeMessage"})
 class WalletControllerTest {
 
@@ -46,6 +51,7 @@ class WalletControllerTest {
         when(walletService.getWallet("user-123")).thenReturn(wallet);
 
         mockMvc.perform(get("/api/wallet/me/info")
+                .header("X-Gateway-Secret", "local-dev-gateway-secret")
                 .header("X-User-Id", "user-123"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.availableBalance").value(100000.00))
@@ -54,13 +60,15 @@ class WalletControllerTest {
 
     @Test
     void testGetWalletInfoMissingHeaderThrowsError() throws Exception {
-        mockMvc.perform(get("/api/wallet/me/info"))
+        mockMvc.perform(get("/api/wallet/me/info")
+                .header("X-Gateway-Secret", "local-dev-gateway-secret"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void testTopUp() throws Exception {
         mockMvc.perform(post("/api/wallet/me/topup")
+                .header("X-Gateway-Secret", "local-dev-gateway-secret")
                 .header("X-User-Id", "user-123")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"amount\": 50000.00}"))
@@ -76,6 +84,7 @@ class WalletControllerTest {
                 .when(walletService).withdraw("user-123", new BigDecimal("500000.00"));
 
         mockMvc.perform(post("/api/wallet/me/withdraw")
+                .header("X-Gateway-Secret", "local-dev-gateway-secret")
                 .header("X-User-Id", "user-123")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"amount\": 500000.00}"))
