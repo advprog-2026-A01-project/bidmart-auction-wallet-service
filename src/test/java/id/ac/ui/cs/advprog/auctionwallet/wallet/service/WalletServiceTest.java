@@ -1,5 +1,8 @@
 package id.ac.ui.cs.advprog.auctionwallet.wallet.service;
 
+import id.ac.ui.cs.advprog.auctionwallet.wallet.event.WalletEventPublisher;
+import id.ac.ui.cs.advprog.auctionwallet.wallet.exception.WalletNotFoundException;
+import id.ac.ui.cs.advprog.auctionwallet.wallet.model.TransactionType;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.model.Wallet;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.model.WalletTransaction;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.repository.WalletRepository;
@@ -22,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "PMD.AvoidDuplicateLiterals", "PMD.UnitTestContainsTooManyAsserts", "PMD.UnitTestAssertionsShouldIncludeMessage"})
 class WalletServiceTest {
 
     @Mock
@@ -29,6 +33,9 @@ class WalletServiceTest {
 
     @Mock
     private WalletTransactionRepository transactionRepository;
+
+    @Mock
+    private WalletEventPublisher eventPublisher;
 
     @InjectMocks
     private WalletService walletService;
@@ -51,6 +58,7 @@ class WalletServiceTest {
         assertEquals(new BigDecimal("150000.00"), testWallet.getAvailableBalance());
         verify(walletRepository, times(1)).save(testWallet);
         verify(transactionRepository, times(1)).save(any(WalletTransaction.class));
+        verify(eventPublisher, times(1)).publishBalanceChangeEvent(any(), any(), any(), any());
     }
 
     @Test
@@ -61,13 +69,14 @@ class WalletServiceTest {
 
         assertEquals(new BigDecimal("60000.00"), testWallet.getAvailableBalance());
         verify(walletRepository, times(1)).save(testWallet);
+        verify(eventPublisher, times(1)).publishBalanceChangeEvent(any(), any(), any(), any());
     }
 
     @Test
     void testHoldForBidSuccess() {
         when(walletRepository.findByUserIdWithLock("user-123")).thenReturn(Optional.of(testWallet));
 
-        walletService.holdForBid("user-123", new BigDecimal("30000.00"));
+        walletService.holdForBid("user-123", new BigDecimal("30000.00"), "auc-123");
 
         assertEquals(new BigDecimal("70000.00"), testWallet.getAvailableBalance());
         assertEquals(new BigDecimal("30000.00"), testWallet.getHeldBalance());
@@ -77,8 +86,8 @@ class WalletServiceTest {
     void testHoldForBidThrowsExceptionWhenNotFound() {
         when(walletRepository.findByUserIdWithLock("unknown")).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            walletService.holdForBid("unknown", new BigDecimal("100.00"));
+        assertThrows(WalletNotFoundException.class, () -> {
+            walletService.holdForBid("unknown", new BigDecimal("100.00"), "auc-123");
         });
     }
 }

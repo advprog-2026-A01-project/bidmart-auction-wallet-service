@@ -6,6 +6,7 @@ on:
       - main
       - staging
       - 'refactor/**'
+      - 'feat/**'
   pull_request:
 
 jobs:
