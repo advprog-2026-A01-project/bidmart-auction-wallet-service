@@ -17,10 +17,13 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class Wallet {
 
+    private static final String AMOUNT_MUST_BE_POSITIVE = "Amount must be positive";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @SuppressWarnings("PMD.ImmutableField")
     @Column(nullable = false, unique = true)
     private String userId;
 
@@ -36,14 +39,14 @@ public class Wallet {
 
     public void addBalance(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+            throw new IllegalArgumentException(AMOUNT_MUST_BE_POSITIVE);
         }
         this.availableBalance = this.availableBalance.add(amount);
     }
 
     public void withdrawBalance(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+            throw new IllegalArgumentException(AMOUNT_MUST_BE_POSITIVE);
         }
         if (this.availableBalance.compareTo(amount) < 0) {
             throw new IllegalArgumentException("Insufficient balance");
@@ -53,7 +56,7 @@ public class Wallet {
 
     public void holdBalance(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+            throw new IllegalArgumentException(AMOUNT_MUST_BE_POSITIVE);
         }
         if (this.availableBalance.compareTo(amount) < 0) {
             throw new IllegalArgumentException("Insufficient balance");
@@ -64,7 +67,7 @@ public class Wallet {
 
     public void releaseBalance(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+            throw new IllegalArgumentException(AMOUNT_MUST_BE_POSITIVE);
         }
         if (this.heldBalance.compareTo(amount) < 0) {
             throw new IllegalArgumentException("Insufficient held balance");
@@ -75,7 +78,7 @@ public class Wallet {
 
     public void deductHeldBalance(BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+            throw new IllegalArgumentException(AMOUNT_MUST_BE_POSITIVE);
         }
         if (this.heldBalance.compareTo(amount) < 0) {
             throw new IllegalArgumentException("Insufficient held balance");

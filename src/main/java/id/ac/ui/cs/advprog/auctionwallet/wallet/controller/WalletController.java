@@ -1,8 +1,12 @@
 package id.ac.ui.cs.advprog.auctionwallet.wallet.controller;
 
+import id.ac.ui.cs.advprog.auctionwallet.wallet.dto.AuctionWalletRequest;
+import id.ac.ui.cs.advprog.auctionwallet.wallet.dto.TopUpRequest;
+import id.ac.ui.cs.advprog.auctionwallet.wallet.dto.WithdrawRequest;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.model.Wallet;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.model.WalletTransaction;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.service.WalletService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +24,7 @@ import java.util.Map;
 @RequestMapping("/api/wallet")
 public class WalletController {
 
-    private static final String AMOUNT_KEY = "amount";
+    private static final String HEADER_USER_ID = "X-User-Id";
     private final WalletService walletService;
 
     public WalletController(WalletService walletService) {
@@ -28,7 +32,7 @@ public class WalletController {
     }
 
     @GetMapping("/me/info")
-    public ResponseEntity<Map<String, BigDecimal>> getMyWalletInfo(@RequestHeader("X-User-Id") String userId) {
+    public ResponseEntity<Map<String, BigDecimal>> getMyWalletInfo(@RequestHeader(HEADER_USER_ID) String userId) {
         Wallet wallet = walletService.getWallet(userId);
         return ResponseEntity.ok(Map.of(
                 "availableBalance", wallet.getAvailableBalance(),
@@ -37,53 +41,37 @@ public class WalletController {
     }
 
     @PostMapping("/me/topup")
-    public ResponseEntity<String> myTopUp(@RequestHeader("X-User-Id") String userId, @RequestBody Map<String, BigDecimal> payload) {
-        walletService.topUp(userId, payload.get(AMOUNT_KEY));
+    public ResponseEntity<String> myTopUp(@RequestHeader(HEADER_USER_ID) String userId, @Valid @RequestBody TopUpRequest payload) {
+        walletService.topUp(userId, payload.getAmount());
         return ResponseEntity.ok("Top-up successful");
     }
 
     @PostMapping("/me/withdraw")
-    public ResponseEntity<String> myWithdraw(@RequestHeader("X-User-Id") String userId, @RequestBody Map<String, BigDecimal> payload) {
-        try {
-            walletService.withdraw(userId, payload.get(AMOUNT_KEY));
-            return ResponseEntity.ok("Withdrawal successful");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<String> myWithdraw(@RequestHeader(HEADER_USER_ID) String userId, @Valid @RequestBody WithdrawRequest payload) {
+        walletService.withdraw(userId, payload.getAmount());
+        return ResponseEntity.ok("Withdrawal successful");
     }
 
     @GetMapping("/me/history")
-    public ResponseEntity<List<WalletTransaction>> getMyHistory(@RequestHeader("X-User-Id") String userId) {
+    public ResponseEntity<List<WalletTransaction>> getMyHistory(@RequestHeader(HEADER_USER_ID) String userId) {
         return ResponseEntity.ok(walletService.getHistory(userId));
     }
 
     @PostMapping("/{userId}/bid/hold")
-    public ResponseEntity<String> holdForBid(@PathVariable String userId, @RequestBody Map<String, BigDecimal> payload) {
-        try {
-            walletService.holdForBid(userId, payload.get(AMOUNT_KEY));
-            return ResponseEntity.ok("Funds held for bid");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<String> holdForBid(@PathVariable String userId, @Valid @RequestBody AuctionWalletRequest payload) {
+        walletService.holdForBid(userId, payload.getAmount(), payload.getReferenceId());
+        return ResponseEntity.ok("Funds held for bid");
     }
 
     @PostMapping("/{userId}/bid/release")
-    public ResponseEntity<String> releaseFromBid(@PathVariable String userId, @RequestBody Map<String, BigDecimal> payload) {
-        try {
-            walletService.releaseFromBid(userId, payload.get(AMOUNT_KEY));
-            return ResponseEntity.ok("Funds released");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<String> releaseFromBid(@PathVariable String userId, @Valid @RequestBody AuctionWalletRequest payload) {
+        walletService.releaseFromBid(userId, payload.getAmount(), payload.getReferenceId());
+        return ResponseEntity.ok("Funds released");
     }
 
     @PostMapping("/{userId}/bid/pay")
-    public ResponseEntity<String> payForWin(@PathVariable String userId, @RequestBody Map<String, BigDecimal> payload) {
-        try {
-            walletService.payFromHeld(userId, payload.get(AMOUNT_KEY));
-            return ResponseEntity.ok("Payment successful from held funds");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<String> payForWin(@PathVariable String userId, @Valid @RequestBody AuctionWalletRequest payload) {
+        walletService.payFromHeld(userId, payload.getAmount(), payload.getReferenceId());
+        return ResponseEntity.ok("Payment successful from held funds");
     }
 }

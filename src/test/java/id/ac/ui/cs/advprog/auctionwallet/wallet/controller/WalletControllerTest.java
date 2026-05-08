@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.auctionwallet.wallet.controller;
 
+import id.ac.ui.cs.advprog.auctionwallet.wallet.exception.GlobalExceptionHandler;
+import id.ac.ui.cs.advprog.auctionwallet.wallet.exception.InsufficientBalanceException;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.model.Wallet;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +23,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(WalletController.class)
+@WebMvcTest(controllers = WalletController.class)
+@SuppressWarnings({"PMD.UnitTestShouldIncludeAssert", "PMD.AvoidDuplicateLiterals", "PMD.UnitTestContainsTooManyAsserts", "PMD.UnitTestAssertionsShouldIncludeMessage"})
 class WalletControllerTest {
 
     @Autowired
@@ -69,7 +72,7 @@ class WalletControllerTest {
 
     @Test
     void testWithdrawInsufficientBalance() throws Exception {
-        doThrow(new IllegalArgumentException("Insufficient balance"))
+        doThrow(new InsufficientBalanceException("Insufficient balance"))
                 .when(walletService).withdraw("user-123", new BigDecimal("500000.00"));
 
         mockMvc.perform(post("/api/wallet/me/withdraw")
@@ -77,6 +80,6 @@ class WalletControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"amount\": 500000.00}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Insufficient balance"));
+                .andExpect(jsonPath("$.error").value("Insufficient balance"));
     }
 }
