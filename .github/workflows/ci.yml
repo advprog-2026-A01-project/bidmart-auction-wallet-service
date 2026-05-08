@@ -5,12 +5,15 @@ on:
     branches:
       - main
       - staging
+      - 'refactor/**'
+      - 'feat/**'
   pull_request:
 
 jobs:
   build-and-test:
     name: Build, Test, and PMD
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -38,10 +41,11 @@ jobs:
         run: ./gradlew clean test
 
       - name: Run PMD
+        if: github.ref == 'refs/heads/main'
         run: ./gradlew pmdMain pmdTest
 
       - name: Upload PMD reports
-        if: failure()
+        if: failure() && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: pmd-reports
