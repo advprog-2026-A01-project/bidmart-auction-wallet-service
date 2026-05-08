@@ -13,6 +13,7 @@ public class GatewaySecretInterceptor implements HandlerInterceptor {
     private String configuredGatewaySecret;
 
     @Override
+    @SuppressWarnings("PMD.LawOfDemeter")
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String gatewaySecretHeader = request.getHeader("X-Gateway-Secret");
 
