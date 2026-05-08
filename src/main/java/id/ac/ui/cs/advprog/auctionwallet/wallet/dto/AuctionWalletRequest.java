@@ -12,6 +12,6 @@ public class AuctionWalletRequest {
     @Positive(message = "Amount must be positive")
     private BigDecimal amount;
 
-    @NotBlank(message = "Reference ID (e.g., auctionId or bidId) is required")
+    @NotBlank(message = "Reference ID is required")
     private String referenceId;
 }
