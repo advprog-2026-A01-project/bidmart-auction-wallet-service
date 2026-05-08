@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - staging
+      - 'refactor/**'
   pull_request:
 
 jobs:
