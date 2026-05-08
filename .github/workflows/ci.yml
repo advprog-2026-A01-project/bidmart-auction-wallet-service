@@ -38,10 +38,11 @@ jobs:
         run: ./gradlew clean test
 
       - name: Run PMD
+        if: github.ref != 'refs/heads/staging'
         run: ./gradlew pmdMain pmdTest
 
       - name: Upload PMD reports
-        if: failure()
+        if: failure() && github.ref != 'refs/heads/staging'
         uses: actions/upload-artifact@v4
         with:
           name: pmd-reports

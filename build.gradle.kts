@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.2.3"
     id("io.spring.dependency-management") version "1.1.4"
+    id("pmd")
 }
 
 group = "id.ac.ui.cs.advprog"
@@ -38,4 +39,11 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+}
+
+pmd {
+    isConsoleOutput = true
+    toolVersion = "6.55.0"
+    ruleSets = listOf()
+    ruleSetFiles = files("config/pmd/ruleset.xml")
 }
