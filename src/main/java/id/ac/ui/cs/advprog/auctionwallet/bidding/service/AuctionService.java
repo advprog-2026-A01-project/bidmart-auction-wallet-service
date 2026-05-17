@@ -6,6 +6,7 @@ import id.ac.ui.cs.advprog.auctionwallet.bidding.model.Auction;
 import id.ac.ui.cs.advprog.auctionwallet.bidding.model.Bid;
 import id.ac.ui.cs.advprog.auctionwallet.bidding.repository.AuctionRepository;
 import id.ac.ui.cs.advprog.auctionwallet.bidding.repository.BidRepository;
+import id.ac.ui.cs.advprog.auctionwallet.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,8 +30,13 @@ public class AuctionService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        if (auction.getStatus() != AuctionStatus.ACTIVE || now.isAfter(auction.getEndTime())) {
+        if (auction.getStatus() != AuctionStatus.ACTIVE && auction.getStatus() != AuctionStatus.EXTENDED) {
             throw new RuntimeException("Auction is no longer active");
+        }
+        if (now.isAfter(auction.getEndTime())) {
+            auction.setStatus(AuctionStatus.CLOSED);
+            auctionRepository.save(auction);
+            throw new RuntimeException("Auction has already closed");
         }
 
         BigDecimal minimumRequiredBid = auction.getCurrentHighestBid().add(auction.getMinimumIncrement());
@@ -38,25 +44,32 @@ public class AuctionService {
             throw new RuntimeException("Bid amount must be at least " + minimumRequiredBid);
         }
 
-        boolean isFundHeld = walletService.holdFunds(userId, bidAmount);
-        if (!isFundHeld) {
-            throw new RuntimeException("Insufficient wallet balance");
+        String referenceId = "BID-AUC-" + auctionId + "-" + System.currentTimeMillis();
+
+        try {
+            walletService.holdForBid(String.valueOf(userId), bidAmount, referenceId);
+        } catch (Exception e) {
+            throw new RuntimeException("Bidding failed: " + e.getMessage());
         }
 
         if (auction.getCurrentHighestBidderId() != null) {
-            walletService.refundFunds(auction.getCurrentHighestBidderId(), auction.getCurrentHighestBid());
+            Long previousBidderId = auction.getCurrentHighestBidderId();
+            BigDecimal previousBidAmount = auction.getCurrentHighestBid();
 
-            Bid previousTopBid = bidRepository.findTopByAuctionIdAndStatus(auctionId, BidStatus.ACTIVE).orElse(null);
+            Bid previousTopBid = bidRepository.findTopByAuctionIdAndStatusOrderByBidAmountDesc(auctionId, BidStatus.ACTIVE)
+                    .orElse(null);
 
             if (previousTopBid != null) {
                 previousTopBid.setStatus(BidStatus.OUTBID);
                 bidRepository.save(previousTopBid);
 
-                boolean isRefunded = walletService.refundFunds(previousTopBid.getUserId(), previousTopBid.getBidAmount());
+                try {
+                    walletService.releaseFromBid(String.valueOf(previousBidderId), previousBidAmount, referenceId);
 
-                if (isRefunded) {
                     previousTopBid.setStatus(BidStatus.REFUNDED);
                     bidRepository.save(previousTopBid);
+                } catch (Exception e) {
+                    System.err.println("Failed to automatic refund for user " + previousBidderId + ": " + e.getMessage());
                 }
             }
         }
@@ -64,6 +77,7 @@ public class AuctionService {
         long minutesLeft = ChronoUnit.MINUTES.between(now, auction.getEndTime());
         if (minutesLeft < 2) {
             auction.setEndTime(now.plusMinutes(2));
+            auction.setStatus(AuctionStatus.EXTENDED);
         }
 
         auction.setCurrentHighestBid(bidAmount);
