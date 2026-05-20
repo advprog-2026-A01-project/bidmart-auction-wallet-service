@@ -90,6 +90,8 @@ tasks.jacocoTestReport {
 sonar {
     properties {
         property("sonar.projectKey", "bidmart-auction-wallet-service")
+        property("sonar.organization", "advprog-2026-a01-project-1")
+        property("sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "https://sonarcloud.io")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
     }
 }
