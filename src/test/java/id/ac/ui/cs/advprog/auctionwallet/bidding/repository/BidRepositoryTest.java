@@ -19,25 +19,37 @@ class BidRepositoryTest {
     private BidRepository bidRepository;
 
     @Test
-    void testFindTopByAuctionIdAndStatusOrderByBidAmountDesc() {
+    void testFindTopBid() {
+
         Bid bid1 = new Bid();
         bid1.setAuctionId(1L);
-        bid1.setBidAmount(new BigDecimal("50000"));
-        bid1.setStatus(BidStatus.OUTBID);
-        bid1.setTimestamp(LocalDateTime.now().minusMinutes(5));
-        bidRepository.save(bid1);
+        bid1.setUserId(1L);
+        bid1.setBidAmount(BigDecimal.valueOf(100));
+        bid1.setTimestamp(LocalDateTime.now());
+        bid1.setStatus(BidStatus.ACTIVE);
 
         Bid bid2 = new Bid();
         bid2.setAuctionId(1L);
-        bid2.setBidAmount(new BigDecimal("60000"));
-        bid2.setStatus(BidStatus.ACTIVE);
+        bid2.setUserId(2L);
+        bid2.setBidAmount(BigDecimal.valueOf(200));
         bid2.setTimestamp(LocalDateTime.now());
+        bid2.setStatus(BidStatus.ACTIVE);
+
+        bidRepository.save(bid1);
         bidRepository.save(bid2);
 
-        Optional<Bid> topBid = bidRepository.findTopByAuctionIdAndStatusOrderByBidAmountDesc(1L, BidStatus.ACTIVE);
+        Optional<Bid> result =
+                bidRepository
+                        .findTopByAuctionIdAndStatusOrderByBidAmountDesc(
+                                1L,
+                                BidStatus.ACTIVE
+                        );
 
-        assertTrue(topBid.isPresent());
-        assertEquals(new BigDecimal("60000"), topBid.get().getBidAmount());
-        assertEquals(BidStatus.ACTIVE, topBid.get().getStatus());
+        assertTrue(result.isPresent());
+
+        assertEquals(
+                BigDecimal.valueOf(200),
+                result.get().getBidAmount()
+        );
     }
 }

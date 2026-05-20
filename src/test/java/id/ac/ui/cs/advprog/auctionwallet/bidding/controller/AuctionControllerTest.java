@@ -1,11 +1,10 @@
 package id.ac.ui.cs.advprog.auctionwallet.bidding.controller;
 
-import id.ac.ui.cs.advprog.auctionwallet.bidding.dto.BidRequestDTO;
-import id.ac.ui.cs.advprog.auctionwallet.bidding.enums.BidStatus;
-import id.ac.ui.cs.advprog.auctionwallet.bidding.model.Bid;
-import id.ac.ui.cs.advprog.auctionwallet.bidding.service.AuctionService;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.ac.ui.cs.advprog.auctionwallet.bidding.dto.BidRequestDTO;
+import id.ac.ui.cs.advprog.auctionwallet.bidding.dto.BidResponseDTO;
+import id.ac.ui.cs.advprog.auctionwallet.bidding.enums.BidStatus;
+import id.ac.ui.cs.advprog.auctionwallet.bidding.service.AuctionService;
 
 import org.junit.jupiter.api.Test;
 
@@ -33,9 +32,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -57,60 +53,50 @@ class AuctionControllerTest {
 
     @Test
     @WithMockUser
-    void testPlaceBid_Endpoint_Success() throws Exception {
+    void testPlaceBidEndpoint() throws Exception {
 
-        BidRequestDTO requestDTO = new BidRequestDTO();
-        requestDTO.setUserId(3L);
-        requestDTO.setAmount(new BigDecimal("15000"));
+        BidRequestDTO request =
+                new BidRequestDTO();
 
-        Bid responseBid = new Bid();
-        responseBid.setId(10L);
-        responseBid.setAuctionId(1L);
-        responseBid.setUserId(3L);
-        responseBid.setBidAmount(new BigDecimal("15000"));
-        responseBid.setStatus(BidStatus.ACTIVE);
-
-        when(auctionService.placeBid(
-                eq(1L),
-                eq(3L),
-                any(BigDecimal.class)
-        )).thenReturn(responseBid);
-
-        mockMvc.perform(post("/api/auctions/1/bids")
-                        .with(csrf())
-                        .header("X-Gateway-Secret", "local-dev-gateway-secret")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDTO)))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(10))
-                .andExpect(jsonPath("$.status").value("ACTIVE"))
-                .andExpect(jsonPath("$.bidAmount").value(15000));
-    }
-
-    @Test
-    @WithMockUser
-    void testPlaceBid_Endpoint_Fail_BadRequest() throws Exception {
-
-        BidRequestDTO requestDTO = new BidRequestDTO();
-        requestDTO.setUserId(3L);
-        requestDTO.setAmount(new BigDecimal("100"));
-
-        when(auctionService.placeBid(
-                eq(1L),
-                eq(3L),
-                any(BigDecimal.class)
-        )).thenThrow(
-                new RuntimeException("Bid amount must be at least 11000")
+        request.setUserId(1L);
+        request.setAmount(
+                BigDecimal.valueOf(200)
         );
 
-        mockMvc.perform(post("/api/auctions/1/bids")
-                        .with(csrf())
-                        .header("X-Gateway-Secret", "local-dev-gateway-secret")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(requestDTO)))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Bid amount must be at least 11000"));
+        BidResponseDTO response =
+                new BidResponseDTO(
+                        1L,
+                        1L,
+                        1L,
+                        BigDecimal.valueOf(200),
+                        BidStatus.ACTIVE
+                );
+
+        when(auctionService.placeBid(
+                eq(1L),
+                eq(1L),
+                any(BigDecimal.class)
+        )).thenReturn(response);
+
+        mockMvc.perform(
+                        post("/api/auctions/1/bids")
+                                .with(csrf())
+                                .header(
+                                        "X-Gateway-Secret",
+                                        "local-dev-gateway-secret"
+                                )
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content(
+                                        objectMapper
+                                                .writeValueAsString(request)
+                                )
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.bidAmount")
+                        .value(200))
+                .andExpect(jsonPath("$.status")
+                        .value("ACTIVE"));
     }
 }

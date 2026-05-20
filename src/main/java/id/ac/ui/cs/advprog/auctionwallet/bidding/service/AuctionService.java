@@ -1,7 +1,7 @@
 package id.ac.ui.cs.advprog.auctionwallet.bidding.service;
 
-import id.ac.ui.cs.advprog.auctionwallet.bidding.enums.AuctionStatus;
-import id.ac.ui.cs.advprog.auctionwallet.bidding.enums.BidStatus;
+import id.ac.ui.cs.advprog.auctionwallet.bidding.dto.BidResponseDTO;
+import id.ac.ui.cs.advprog.auctionwallet.bidding.exception.AuctionNotFoundException;
 import id.ac.ui.cs.advprog.auctionwallet.bidding.model.Auction;
 import id.ac.ui.cs.advprog.auctionwallet.bidding.model.Bid;
 import id.ac.ui.cs.advprog.auctionwallet.bidding.repository.AuctionRepository;
@@ -19,78 +19,121 @@ import java.time.temporal.ChronoUnit;
 @RequiredArgsConstructor
 public class AuctionService {
 
+    private static final long EXTENSION_MINUTES = 2;
+
     private final AuctionRepository auctionRepository;
     private final BidRepository bidRepository;
     private final WalletService walletService;
+    private final AuctionValidationService validationService;
+    private final BidRefundService bidRefundService;
 
     @Transactional
-    public Bid placeBid(Long auctionId, Long userId, BigDecimal bidAmount) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new RuntimeException("Auction not found"));
+    public BidResponseDTO placeBid(
+            Long auctionId,
+            Long userId,
+            BigDecimal bidAmount
+    ) {
 
-        LocalDateTime now = LocalDateTime.now();
+        Auction auction = auctionRepository
+                .findById(auctionId)
+                .orElseThrow(() ->
+                        new AuctionNotFoundException(auctionId)
+                );
 
-        if (auction.getStatus() != AuctionStatus.ACTIVE && auction.getStatus() != AuctionStatus.EXTENDED) {
-            throw new RuntimeException("Auction is no longer active");
-        }
-        if (now.isAfter(auction.getEndTime())) {
-            auction.setStatus(AuctionStatus.CLOSED);
-            auctionRepository.save(auction);
-            throw new RuntimeException("Auction has already closed");
-        }
+        validationService.validateAuction(auction);
+        validationService.validateBidAmount(
+                auction,
+                bidAmount
+        );
 
-        BigDecimal minimumRequiredBid = auction.getCurrentHighestBid().add(auction.getMinimumIncrement());
-        if (bidAmount.compareTo(minimumRequiredBid) < 0) {
-            throw new RuntimeException("Bid amount must be at least " + minimumRequiredBid);
-        }
+        String referenceId =
+                generateReferenceId(auctionId);
 
-        String referenceId = "BID-AUC-" + auctionId + "-" + System.currentTimeMillis();
+        walletService.holdForBid(
+                String.valueOf(userId),
+                bidAmount,
+                referenceId
+        );
 
-        try {
-            walletService.holdForBid(String.valueOf(userId), bidAmount, referenceId);
-        } catch (Exception e) {
-            throw new RuntimeException("Bidding failed: " + e.getMessage());
-        }
+        bidRefundService.refundPreviousBidder(
+                auction,
+                referenceId
+        );
 
-        if (auction.getCurrentHighestBidderId() != null) {
-            Long previousBidderId = auction.getCurrentHighestBidderId();
-            BigDecimal previousBidAmount = auction.getCurrentHighestBid();
+        extendAuctionIfNeeded(auction);
 
-            Bid previousTopBid = bidRepository.findTopByAuctionIdAndStatusOrderByBidAmountDesc(auctionId, BidStatus.ACTIVE)
-                    .orElse(null);
+        auction.updateHighestBid(
+                userId,
+                bidAmount
+        );
 
-            if (previousTopBid != null) {
-                previousTopBid.setStatus(BidStatus.OUTBID);
-                bidRepository.save(previousTopBid);
-
-                try {
-                    walletService.releaseFromBid(String.valueOf(previousBidderId), previousBidAmount, referenceId);
-
-                    previousTopBid.setStatus(BidStatus.REFUNDED);
-                    bidRepository.save(previousTopBid);
-                } catch (Exception e) {
-                    System.err.println("Failed to automatic refund for user " + previousBidderId + ": " + e.getMessage());
-                }
-            }
-        }
-
-        long minutesLeft = ChronoUnit.MINUTES.between(now, auction.getEndTime());
-        if (minutesLeft < 2) {
-            auction.setEndTime(now.plusMinutes(2));
-            auction.setStatus(AuctionStatus.EXTENDED);
-        }
-
-        auction.setCurrentHighestBid(bidAmount);
-        auction.setCurrentHighestBidderId(userId);
         auctionRepository.save(auction);
 
-        Bid newBid = new Bid();
-        newBid.setAuctionId(auctionId);
-        newBid.setUserId(userId);
-        newBid.setBidAmount(bidAmount);
-        newBid.setTimestamp(now);
-        newBid.setStatus(BidStatus.ACTIVE);
+        Bid bid = createBid(
+                auctionId,
+                userId,
+                bidAmount
+        );
 
-        return bidRepository.save(newBid);
+        Bid savedBid = bidRepository.save(bid);
+
+        return mapToResponse(savedBid);
+    }
+
+    private void extendAuctionIfNeeded(
+            Auction auction
+    ) {
+
+        long minutesLeft =
+                ChronoUnit.MINUTES.between(
+                        LocalDateTime.now(),
+                        auction.getEndTime()
+                );
+
+        if (minutesLeft < EXTENSION_MINUTES) {
+            auction.extendAuction(
+                    EXTENSION_MINUTES
+            );
+        }
+    }
+
+    private Bid createBid(
+            Long auctionId,
+            Long userId,
+            BigDecimal bidAmount
+    ) {
+
+        Bid bid = new Bid();
+
+        bid.setAuctionId(auctionId);
+        bid.setUserId(userId);
+        bid.setBidAmount(bidAmount);
+        bid.setTimestamp(LocalDateTime.now());
+
+        bid.markAsActive();
+
+        return bid;
+    }
+
+    private String generateReferenceId(
+            Long auctionId
+    ) {
+        return "BID-AUC-"
+                + auctionId
+                + "-"
+                + System.currentTimeMillis();
+    }
+
+    private BidResponseDTO mapToResponse(
+            Bid bid
+    ) {
+
+        return new BidResponseDTO(
+                bid.getId(),
+                bid.getAuctionId(),
+                bid.getUserId(),
+                bid.getBidAmount(),
+                bid.getStatus()
+        );
     }
 }
