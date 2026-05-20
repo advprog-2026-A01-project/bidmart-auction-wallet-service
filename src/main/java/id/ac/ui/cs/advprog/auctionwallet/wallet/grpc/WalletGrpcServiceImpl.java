@@ -21,6 +21,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import java.math.BigDecimal;
 
 @GrpcService
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidDuplicateLiterals", "PMD.AvoidCatchingGenericException"})
 public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServiceImplBase {
 
     private static final String FUNDS_HELD_MSG      = "Funds held successfully";
@@ -34,7 +35,6 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
     }
 
     @Override
-    @SuppressWarnings("PMD.LawOfDemeter")
     public void createWallet(CreateWalletRequest request,
                              StreamObserver<CreateWalletResponse> responseObserver) {
         try {
@@ -51,7 +51,6 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
     }
 
     @Override
-    @SuppressWarnings("PMD.LawOfDemeter")
     public void getWalletBalance(GetBalanceRequest request,
                                  StreamObserver<GetBalanceResponse> responseObserver) {
         try {
@@ -70,7 +69,6 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
 
 
     @Override
-    @SuppressWarnings("PMD.LawOfDemeter")
     public void holdFunds(HoldFundsRequest request,
                           StreamObserver<HoldFundsResponse> responseObserver) {
         try {
@@ -96,7 +94,6 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
     }
 
     @Override
-    @SuppressWarnings("PMD.LawOfDemeter")
     public void releaseFunds(ReleaseFundsRequest request,
                              StreamObserver<ReleaseFundsResponse> responseObserver) {
         try {
@@ -122,7 +119,6 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
     }
 
     @Override
-    @SuppressWarnings("PMD.LawOfDemeter")
     public void settleFunds(SettleFundsRequest request,
                             StreamObserver<SettleFundsResponse> responseObserver) {
         try {
