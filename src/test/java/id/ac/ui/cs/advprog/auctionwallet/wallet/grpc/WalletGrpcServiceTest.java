@@ -141,6 +141,18 @@ class WalletGrpcServiceTest {
     }
 
     @Test
+    void testGetWalletBalanceServiceExceptionMapsToInternal() {
+        when(walletService.getWallet(USER_ID)).thenThrow(new RuntimeException("DB error"));
+
+        GetBalanceRequest request = GetBalanceRequest.newBuilder().setUserId(USER_ID).build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.getWalletBalance(request));
+
+        assertEquals(io.grpc.Status.Code.INTERNAL, ex.getStatus().getCode());
+    }
+
+    @Test
     void testHoldFundsSuccessReturnsTrue() {
         doNothing().when(walletService).holdForBid(eq(USER_ID), any(BigDecimal.class), eq(AUC_ID));
 
@@ -184,6 +196,20 @@ class WalletGrpcServiceTest {
     }
 
     @Test
+    void testHoldFundsServiceExceptionMapsToInternal() {
+        doThrow(new RuntimeException("DB error"))
+                .when(walletService).holdForBid(any(), any(), any());
+
+        HoldFundsRequest request = HoldFundsRequest.newBuilder()
+                .setUserId(USER_ID).setAmount("100.00").setReferenceId(AUC_ID).build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.holdFunds(request));
+
+        assertEquals(io.grpc.Status.Code.INTERNAL, ex.getStatus().getCode());
+    }
+
+    @Test
     void testReleaseFundsSuccessReturnsTrue() {
         doNothing().when(walletService).releaseFromBid(any(), any(), any());
 
@@ -223,6 +249,20 @@ class WalletGrpcServiceTest {
     }
 
     @Test
+    void testReleaseFundsServiceExceptionMapsToInternal() {
+        doThrow(new RuntimeException("DB error"))
+                .when(walletService).releaseFromBid(any(), any(), any());
+
+        ReleaseFundsRequest request = ReleaseFundsRequest.newBuilder()
+                .setUserId(USER_ID).setAmount("100.00").setReferenceId(AUC_ID).build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.releaseFunds(request));
+
+        assertEquals(io.grpc.Status.Code.INTERNAL, ex.getStatus().getCode());
+    }
+
+    @Test
     void testSettleFundsSuccessReturnsTrue() {
         doNothing().when(walletService).payFromHeld(any(), any(), any());
 
@@ -259,6 +299,20 @@ class WalletGrpcServiceTest {
                 () -> stub.settleFunds(request));
 
         assertEquals(io.grpc.Status.Code.FAILED_PRECONDITION, ex.getStatus().getCode());
+    }
+
+    @Test
+    void testSettleFundsServiceExceptionMapsToInternal() {
+        doThrow(new RuntimeException("DB error"))
+                .when(walletService).payFromHeld(any(), any(), any());
+
+        SettleFundsRequest request = SettleFundsRequest.newBuilder()
+                .setUserId(USER_ID).setAmount("100.00").setReferenceId(AUC_ID).build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.settleFunds(request));
+
+        assertEquals(io.grpc.Status.Code.INTERNAL, ex.getStatus().getCode());
     }
 
     @Test

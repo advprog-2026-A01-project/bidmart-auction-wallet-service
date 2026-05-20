@@ -1,121 +1,81 @@
 package id.ac.ui.cs.advprog.auctionwallet.wallet.service;
 
-import id.ac.ui.cs.advprog.auctionwallet.wallet.event.WalletEventPublisher;
-import id.ac.ui.cs.advprog.auctionwallet.wallet.exception.InsufficientBalanceException;
-import id.ac.ui.cs.advprog.auctionwallet.wallet.exception.WalletNotFoundException;
-import id.ac.ui.cs.advprog.auctionwallet.wallet.model.TransactionType;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.model.Wallet;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.model.WalletTransaction;
-import id.ac.ui.cs.advprog.auctionwallet.wallet.repository.WalletRepository;
-import id.ac.ui.cs.advprog.auctionwallet.wallet.repository.WalletTransactionRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-@Service
-public class WalletService {
-    
-    private static final String WALLET_NOT_FOUND = "Wallet not found";
-    private final WalletRepository walletRepository;
-    private final WalletTransactionRepository transactionRepository;
-    private final WalletEventPublisher eventPublisher;
+/**
+ * WalletService defines the contract for all wallet operations.
+ *
+ * Depending on this interface rather than the concrete implementation (WalletServiceImpl)
+ * satisfies the Dependency Inversion Principle (D in SOLID) and makes every
+ * caller (WalletController, WalletGrpcServiceImpl) easy to test by allowing
+ * Mockito to replace the dependency with a mock.
+ */
+public interface WalletService {
 
-    public WalletService(WalletRepository walletRepository, 
-                         WalletTransactionRepository transactionRepository,
-                         WalletEventPublisher eventPublisher) {
-        this.walletRepository = walletRepository;
-        this.transactionRepository = transactionRepository;
-        this.eventPublisher = eventPublisher;
-    }
+    /**
+     * Returns an existing wallet for the given user, or creates and persists a new one.
+     * This is the only place where auto-creation occurs, and is intentionally called
+     * exclusively by the gRPC CreateWallet endpoint.
+     */
+    Wallet getWallet(String userId);
 
-    public Wallet getWallet(String userId) {
-        return walletRepository.findByUserId(userId)
-                .orElseGet(() -> walletRepository.save(new Wallet(userId)));
-    }
+    /**
+     * Adds funds to a user's available balance and records the transaction.
+     *
+     * @throws id.ac.ui.cs.advprog.auctionwallet.wallet.exception.WalletNotFoundException
+     *         if the user has no wallet (must call CreateWallet first)
+     */
+    void topUp(String userId, BigDecimal amount);
 
-    @Transactional
-    public void topUp(String userId, BigDecimal amount) {
-        Wallet wallet = walletRepository.findByUserIdWithLock(userId)
-                .orElseGet(() -> new Wallet(userId));
-        BigDecimal balanceBefore = wallet.getAvailableBalance();
-        wallet.addBalance(amount);
-        walletRepository.save(wallet);
-        
-        transactionRepository.save(new WalletTransaction(userId, TransactionType.TOP_UP, amount, balanceBefore, wallet.getAvailableBalance(), null));
-        eventPublisher.publishBalanceChangeEvent(userId, TransactionType.TOP_UP, amount, wallet.getAvailableBalance());
-    }
+    /**
+     * Deducts funds from a user's available balance.
+     *
+     * @throws id.ac.ui.cs.advprog.auctionwallet.wallet.exception.WalletNotFoundException
+     *         if the wallet does not exist
+     * @throws id.ac.ui.cs.advprog.auctionwallet.wallet.exception.InsufficientBalanceException
+     *         if available balance is less than the requested amount
+     */
+    void withdraw(String userId, BigDecimal amount);
 
-    @Transactional
-    public void withdraw(String userId, BigDecimal amount) {
-        Wallet wallet = walletRepository.findByUserIdWithLock(userId)
-                .orElseThrow(() -> new WalletNotFoundException(WALLET_NOT_FOUND));
-        BigDecimal balanceBefore = wallet.getAvailableBalance();
-        
-        try {
-            wallet.withdrawBalance(amount);
-        } catch (IllegalArgumentException e) {
-            throw new InsufficientBalanceException(e.getMessage(), e);
-        }
-        
-        walletRepository.save(wallet);
-        transactionRepository.save(new WalletTransaction(userId, TransactionType.WITHDRAWAL, amount, balanceBefore, wallet.getAvailableBalance(), null));
-        eventPublisher.publishBalanceChangeEvent(userId, TransactionType.WITHDRAWAL, amount, wallet.getAvailableBalance());
-    }
+    /**
+     * Moves funds from available to held when a bid is placed.
+     *
+     * @param referenceId the auction or bid ID for the audit trail
+     * @throws id.ac.ui.cs.advprog.auctionwallet.wallet.exception.WalletNotFoundException
+     *         if the wallet does not exist
+     * @throws id.ac.ui.cs.advprog.auctionwallet.wallet.exception.InsufficientBalanceException
+     *         if available balance is less than the requested amount
+     */
+    void holdForBid(String userId, BigDecimal amount, String referenceId);
 
-    @Transactional
-    public void holdForBid(String userId, BigDecimal amount, String referenceId) {
-        Wallet wallet = walletRepository.findByUserIdWithLock(userId)
-                .orElseThrow(() -> new WalletNotFoundException(WALLET_NOT_FOUND));
-        BigDecimal balanceBefore = wallet.getAvailableBalance();
-        
-        try {
-            wallet.holdBalance(amount);
-        } catch (IllegalArgumentException e) {
-            throw new InsufficientBalanceException(e.getMessage(), e);
-        }
-        
-        walletRepository.save(wallet);
-        transactionRepository.save(new WalletTransaction(userId, TransactionType.HOLD, amount, balanceBefore, wallet.getAvailableBalance(), referenceId));
-        eventPublisher.publishBalanceChangeEvent(userId, TransactionType.HOLD, amount, wallet.getAvailableBalance());
-    }
+    /**
+     * Moves funds from held back to available when a user is outbid.
+     *
+     * @param referenceId the auction or bid ID for the audit trail
+     * @throws id.ac.ui.cs.advprog.auctionwallet.wallet.exception.WalletNotFoundException
+     *         if the wallet does not exist
+     * @throws id.ac.ui.cs.advprog.auctionwallet.wallet.exception.InsufficientBalanceException
+     *         if held balance is less than the amount to release
+     */
+    void releaseFromBid(String userId, BigDecimal amount, String referenceId);
 
-    @Transactional
-    public void releaseFromBid(String userId, BigDecimal amount, String referenceId) {
-        Wallet wallet = walletRepository.findByUserIdWithLock(userId)
-                .orElseThrow(() -> new WalletNotFoundException(WALLET_NOT_FOUND));
-        BigDecimal balanceBefore = wallet.getAvailableBalance();
-        
-        try {
-            wallet.releaseBalance(amount);
-        } catch (IllegalArgumentException e) {
-            throw new InsufficientBalanceException(e.getMessage(), e);
-        }
-        
-        walletRepository.save(wallet);
-        transactionRepository.save(new WalletTransaction(userId, TransactionType.RELEASE, amount, balanceBefore, wallet.getAvailableBalance(), referenceId));
-        eventPublisher.publishBalanceChangeEvent(userId, TransactionType.RELEASE, amount, wallet.getAvailableBalance());
-    }
+    /**
+     * Deducts held funds as payment when a user wins an auction.
+     *
+     * @param referenceId the auction or bid ID for the audit trail
+     * @throws id.ac.ui.cs.advprog.auctionwallet.wallet.exception.WalletNotFoundException
+     *         if the wallet does not exist
+     * @throws id.ac.ui.cs.advprog.auctionwallet.wallet.exception.InsufficientBalanceException
+     *         if held balance is less than the amount to settle
+     */
+    void payFromHeld(String userId, BigDecimal amount, String referenceId);
 
-    @Transactional
-    public void payFromHeld(String userId, BigDecimal amount, String referenceId) {
-        Wallet wallet = walletRepository.findByUserIdWithLock(userId)
-                .orElseThrow(() -> new WalletNotFoundException(WALLET_NOT_FOUND));
-        BigDecimal balanceBefore = wallet.getAvailableBalance();
-        
-        try {
-            wallet.deductHeldBalance(amount);
-        } catch (IllegalArgumentException e) {
-            throw new InsufficientBalanceException(e.getMessage(), e);
-        }
-        
-        walletRepository.save(wallet);
-        transactionRepository.save(new WalletTransaction(userId, TransactionType.PAYMENT, amount, balanceBefore, wallet.getAvailableBalance(), referenceId));
-        eventPublisher.publishBalanceChangeEvent(userId, TransactionType.PAYMENT, amount, wallet.getAvailableBalance());
-    }
-
-    public List<WalletTransaction> getHistory(String userId) {
-        return transactionRepository.findByUserIdOrderByCreatedAtDesc(userId);
-    }
+    /**
+     * Returns the full transaction history for a user, newest first.
+     */
+    List<WalletTransaction> getHistory(String userId);
 }
