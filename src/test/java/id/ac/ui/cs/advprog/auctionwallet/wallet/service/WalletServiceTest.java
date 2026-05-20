@@ -171,7 +171,7 @@ class WalletServiceTest {
         walletService.releaseFromBid("user-123", new BigDecimal("30000.00"), "auc-123");
 
         assertEquals(new BigDecimal("100000.00"), testWallet.getAvailableBalance());
-        assertEquals(BigDecimal.ZERO, testWallet.getHeldBalance());
+        assertEquals(new BigDecimal("0.00"), testWallet.getHeldBalance());
     }
 
     @Test
@@ -199,7 +199,7 @@ class WalletServiceTest {
 
         walletService.payFromHeld("user-123", new BigDecimal("50000.00"), "auc-123");
 
-        assertEquals(BigDecimal.ZERO, testWallet.getHeldBalance());
+        assertEquals(new BigDecimal("0.00"), testWallet.getHeldBalance());
         verify(transactionRepository).save(any(WalletTransaction.class));
         verify(eventPublisher).publishBalanceChangeEvent(any(), any(), any(), any());
     }
