@@ -57,8 +57,6 @@ class WalletServiceTest {
         testWallet.addBalance(new BigDecimal("100000.00"));
     }
 
-    // ─── getWallet ───────────────────────────────────────────────────────────
-
     @Test
     void testGetWalletReturnsExistingWallet() {
         when(walletRepository.findByUserId("user-123")).thenReturn(Optional.of(testWallet));
@@ -81,8 +79,6 @@ class WalletServiceTest {
         verify(walletRepository).save(any(Wallet.class));
     }
 
-    // ─── topUp ───────────────────────────────────────────────────────────────
-
     @Test
     void testTopUpSuccess() {
         when(walletRepository.findByUserIdWithLock("user-123")).thenReturn(Optional.of(testWallet));
@@ -103,8 +99,6 @@ class WalletServiceTest {
         assertThrows(WalletNotFoundException.class,
                 () -> walletService.topUp("unknown", new BigDecimal("1000.00")));
     }
-
-    // ─── withdraw ────────────────────────────────────────────────────────────
 
     @Test
     void testWithdrawSuccess() {
@@ -133,8 +127,6 @@ class WalletServiceTest {
                 () -> walletService.withdraw("user-123", new BigDecimal("999999.00")));
     }
 
-    // ─── holdForBid ──────────────────────────────────────────────────────────
-
     @Test
     void testHoldForBidSuccess() {
         when(walletRepository.findByUserIdWithLock("user-123")).thenReturn(Optional.of(testWallet));
@@ -160,8 +152,6 @@ class WalletServiceTest {
         assertThrows(InsufficientBalanceException.class,
                 () -> walletService.holdForBid("user-123", new BigDecimal("999999.00"), "auc-123"));
     }
-
-    // ─── releaseFromBid ──────────────────────────────────────────────────────
 
     @Test
     void testReleaseFromBidSuccess() {
@@ -190,8 +180,6 @@ class WalletServiceTest {
                 () -> walletService.releaseFromBid("user-123", new BigDecimal("50000.00"), "auc-123"));
     }
 
-    // ─── payFromHeld ─────────────────────────────────────────────────────────
-
     @Test
     void testPayFromHeldSuccess() {
         testWallet.holdBalance(new BigDecimal("50000.00"));
@@ -219,8 +207,6 @@ class WalletServiceTest {
         assertThrows(InsufficientBalanceException.class,
                 () -> walletService.payFromHeld("user-123", new BigDecimal("50000.00"), "auc-123"));
     }
-
-    // ─── getHistory ──────────────────────────────────────────────────────────
 
     @Test
     void testGetHistoryReturnsTransactions() {

@@ -10,7 +10,6 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final GatewaySecretInterceptor gatewaySecretInterceptor;
 
-    @Autowired
     public WebConfig(GatewaySecretInterceptor gatewaySecretInterceptor) {
         this.gatewaySecretInterceptor = gatewaySecretInterceptor;
     }

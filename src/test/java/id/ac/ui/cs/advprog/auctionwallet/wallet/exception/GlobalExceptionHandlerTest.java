@@ -22,7 +22,8 @@ import static org.mockito.Mockito.when;
     "PMD.UnitTestShouldIncludeAssert",
     "PMD.UnitTestContainsTooManyAsserts",
     "PMD.UnitTestAssertionsShouldIncludeMessage",
-    "PMD.LawOfDemeter"
+    "PMD.LawOfDemeter",
+    "PMD.AvoidDuplicateLiterals"
 })
 class GlobalExceptionHandlerTest {
 

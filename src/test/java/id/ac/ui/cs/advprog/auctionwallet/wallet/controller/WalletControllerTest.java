@@ -62,8 +62,6 @@ class WalletControllerTest {
         wallet.addBalance(new BigDecimal("100000.00"));
     }
 
-    // Security
-
     @Test
     void testRequestWithoutGatewaySecretIsRejected() throws Exception {
         mockMvc.perform(get("/api/wallet/me/info")
@@ -78,8 +76,6 @@ class WalletControllerTest {
                 .header(USER_HEADER, USER_ID))
                 .andExpect(status().isUnauthorized());
     }
-
-    // GET /me/info
 
     @Test
     void testGetWalletInfo() throws Exception {
@@ -99,8 +95,6 @@ class WalletControllerTest {
                 .header(GATEWAY_HEADER, GATEWAY_SECRET))
                 .andExpect(status().isBadRequest());
     }
-
-    // POST /me/topup
 
     @Test
     void testTopUp() throws Exception {
@@ -124,8 +118,6 @@ class WalletControllerTest {
                 .content("{\"amount\": -100.00}"))
                 .andExpect(status().isBadRequest());
     }
-
-    // POST /me/withdraw
 
     @Test
     void testWithdrawSuccess() throws Exception {
@@ -154,8 +146,6 @@ class WalletControllerTest {
                 .andExpect(jsonPath("$.error").value("Insufficient balance"));
     }
 
-    // GET /me/history
-
     @Test
     void testGetHistory() throws Exception {
         WalletTransaction tx = new WalletTransaction(USER_ID, TransactionType.TOP_UP,
@@ -168,8 +158,6 @@ class WalletControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].type").value("TOP_UP"));
     }
-
-    // POST /{userId}/bid/hold
 
     @Test
     void testHoldForBid() throws Exception {
@@ -198,8 +186,6 @@ class WalletControllerTest {
                 .andExpect(jsonPath("$.error").value("Insufficient balance"));
     }
 
-    // POST /{userId}/bid/release
-
     @Test
     void testReleaseFromBid() throws Exception {
         doNothing().when(walletService).releaseFromBid(USER_ID, new BigDecimal("30000.00"), "auc-001");
@@ -211,8 +197,6 @@ class WalletControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("Funds released"));
     }
-
-    // POST /{userId}/bid/pay
 
     @Test
     void testPayForWin() throws Exception {
