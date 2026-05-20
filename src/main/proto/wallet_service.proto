@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package bidmart.wallet;
+
+option java_package = "id.ac.ui.cs.advprog.auctionwallet.grpc";
+option java_outer_classname = "WalletServiceProto";
+option java_multiple_files = true;
+
+service WalletGrpcService {
+  rpc CreateWallet(CreateWalletRequest) returns (CreateWalletResponse);
+  rpc GetWalletBalance(GetBalanceRequest) returns (GetBalanceResponse);
+  rpc HoldFunds(HoldFundsRequest) returns (HoldFundsResponse);
+  rpc ReleaseFunds(ReleaseFundsRequest) returns (ReleaseFundsResponse);
+  rpc SettleFunds(SettleFundsRequest) returns (SettleFundsResponse);
+}
+
+message CreateWalletRequest {
+  string user_id = 1;
+}
+
+message CreateWalletResponse {
+  bool success  = 1;
+  string user_id = 2;
+}
+
+message GetBalanceRequest {
+  string user_id = 1;
+}
+
+message GetBalanceResponse {
+  string user_id            = 1;
+  string available_balance  = 2;
+  string held_balance       = 3;
+}
+
+message HoldFundsRequest {
+  string user_id      = 1;
+  string amount       = 2;   
+  string reference_id = 3;   
+}
+
+message HoldFundsResponse {
+  bool   success = 1;
+  string message = 2;
+}
+
+message ReleaseFundsRequest {
+  string user_id      = 1;
+  string amount       = 2;
+  string reference_id = 3;
+}
+
+message ReleaseFundsResponse {
+  bool   success = 1;
+  string message = 2;
+}
+
+message SettleFundsRequest {
+  string user_id      = 1;
+  string amount       = 2;
+  string reference_id = 3;
+}
+
+message SettleFundsResponse {
+  bool   success = 1;
+  string message = 2;
+}
