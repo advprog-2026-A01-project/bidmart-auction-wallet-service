@@ -46,7 +46,10 @@ import static org.mockito.Mockito.when;
     "PMD.UnitTestShouldIncludeAssert",
     "PMD.AvoidDuplicateLiterals",
     "PMD.UnitTestContainsTooManyAsserts",
-    "PMD.UnitTestAssertionsShouldIncludeMessage"
+    "PMD.UnitTestAssertionsShouldIncludeMessage",
+    "PMD.ExcessiveImports",
+    "PMD.TooManyMethods",
+    "PMD.LawOfDemeter"
 })
 class WalletGrpcServiceTest {
 

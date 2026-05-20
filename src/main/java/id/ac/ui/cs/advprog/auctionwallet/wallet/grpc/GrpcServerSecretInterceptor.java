@@ -19,10 +19,10 @@ public class GrpcServerSecretInterceptor implements ServerInterceptor {
 
     @Override
     @SuppressWarnings("PMD.LawOfDemeter")
-    public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
-            ServerCall<ReqT, RespT> call,
+    public <I, O> ServerCall.Listener<I> interceptCall(
+            ServerCall<I, O> call,
             Metadata headers,
-            ServerCallHandler<ReqT, RespT> next) {
+            ServerCallHandler<I, O> next) {
 
         String incomingSecret = headers.get(GATEWAY_SECRET_KEY);
         if (incomingSecret == null || !incomingSecret.equals(configuredSecret)) {
