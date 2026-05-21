@@ -8,8 +8,6 @@ import id.ac.ui.cs.advprog.auctionwallet.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-
 @Service
 @RequiredArgsConstructor
 public class BidRefundService {
