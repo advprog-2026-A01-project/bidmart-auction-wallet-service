@@ -3,6 +3,8 @@ package id.ac.ui.cs.advprog.auctionwallet.bidding.model;
 import id.ac.ui.cs.advprog.auctionwallet.bidding.enums.BidStatus;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class BidTest {
@@ -59,6 +61,51 @@ class BidTest {
         assertTrue(
                 bid.isActive(),
                 "Bid should be active"
+        );
+    }
+
+    @Test
+    void testMarkAsWon() {
+
+        Bid bid = new Bid();
+
+        bid.markAsWon();
+
+        assertEquals(
+                BidStatus.WON,
+                bid.getStatus(),
+                "Status should become WON"
+        );
+    }
+
+    @Test
+    void testIsRefundedReturnsTrue() {
+
+        Bid bid = new Bid();
+
+        bid.markAsRefunded();
+
+        assertEquals(
+                true,
+                bid.isRefunded(),
+                "Bid should be refunded"
+        );
+    }
+
+    @Test
+    void testTimestampGetterSetter() {
+
+        Bid bid = new Bid();
+
+        LocalDateTime now =
+                LocalDateTime.now();
+
+        bid.setTimestamp(now);
+
+        assertEquals(
+                now,
+                bid.getTimestamp(),
+                "Timestamp should match"
         );
     }
 }

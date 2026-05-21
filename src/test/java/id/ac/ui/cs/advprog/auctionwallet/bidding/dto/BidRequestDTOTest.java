@@ -4,14 +4,15 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BidRequestDTOTest {
 
     @Test
-    void testGetterAndSetterUserId() {
+    void testBidRequestDTOSetAndGetUserId() {
 
-        BidRequestDTO dto = new BidRequestDTO();
+        BidRequestDTO dto =
+                new BidRequestDTO();
 
         dto.setUserId(1L);
 
@@ -23,14 +24,17 @@ class BidRequestDTOTest {
     }
 
     @Test
-    void testGetterAndSetterAmount() {
+    void testBidRequestDTOSetAndGetAmount() {
 
-        BidRequestDTO dto = new BidRequestDTO();
+        BidRequestDTO dto =
+                new BidRequestDTO();
 
-        dto.setAmount(BigDecimal.valueOf(100));
+        dto.setAmount(
+                BigDecimal.valueOf(200)
+        );
 
         assertEquals(
-                BigDecimal.valueOf(100),
+                BigDecimal.valueOf(200),
                 dto.getAmount(),
                 "Amount should match"
         );

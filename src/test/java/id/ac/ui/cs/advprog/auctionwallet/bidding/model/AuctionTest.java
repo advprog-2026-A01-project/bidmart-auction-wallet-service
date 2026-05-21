@@ -106,4 +106,48 @@ class AuctionTest {
                 "Auction status should be CLOSED"
         );
     }
+
+    @Test
+    void testExtendAuction() {
+
+        Auction auction = new Auction();
+
+        auction.extendAuction(10);
+
+        assertEquals(
+                AuctionStatus.EXTENDED,
+                auction.getStatus(),
+                "Status should become EXTENDED"
+        );
+    }
+
+    @Test
+    void testSetAndGetItemId() {
+
+        Auction auction = new Auction();
+
+        auction.setItemId(5L);
+
+        assertEquals(
+                5L,
+                auction.getItemId(),
+                "Item id should match"
+        );
+    }
+
+    @Test
+    void testSetAndGetStartingPrice() {
+
+        Auction auction = new Auction();
+
+        auction.setStartingPrice(
+                BigDecimal.valueOf(100)
+        );
+
+        assertEquals(
+                BigDecimal.valueOf(100),
+                auction.getStartingPrice(),
+                "Starting price should match"
+        );
+    }
 }

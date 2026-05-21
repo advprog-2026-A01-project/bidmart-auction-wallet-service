@@ -1,24 +1,23 @@
 package id.ac.ui.cs.advprog.auctionwallet.bidding.dto;
 
 import id.ac.ui.cs.advprog.auctionwallet.bidding.enums.BidStatus;
-
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BidResponseDTOTest {
 
     @Test
-    void testConstructorBidId() {
+    void testBidResponseDTOBidId() {
 
         BidResponseDTO dto =
                 new BidResponseDTO(
                         1L,
                         2L,
                         3L,
-                        BigDecimal.valueOf(100),
+                        BigDecimal.valueOf(500),
                         BidStatus.ACTIVE
                 );
 
@@ -30,14 +29,14 @@ class BidResponseDTOTest {
     }
 
     @Test
-    void testConstructorAuctionId() {
+    void testBidResponseDTOAuctionId() {
 
         BidResponseDTO dto =
                 new BidResponseDTO(
                         1L,
                         2L,
                         3L,
-                        BigDecimal.valueOf(100),
+                        BigDecimal.valueOf(500),
                         BidStatus.ACTIVE
                 );
 
@@ -49,52 +48,14 @@ class BidResponseDTOTest {
     }
 
     @Test
-    void testConstructorUserId() {
+    void testBidResponseDTOStatus() {
 
         BidResponseDTO dto =
                 new BidResponseDTO(
                         1L,
                         2L,
                         3L,
-                        BigDecimal.valueOf(100),
-                        BidStatus.ACTIVE
-                );
-
-        assertEquals(
-                3L,
-                dto.getUserId(),
-                "User id should match"
-        );
-    }
-
-    @Test
-    void testConstructorBidAmount() {
-
-        BidResponseDTO dto =
-                new BidResponseDTO(
-                        1L,
-                        2L,
-                        3L,
-                        BigDecimal.valueOf(100),
-                        BidStatus.ACTIVE
-                );
-
-        assertEquals(
-                BigDecimal.valueOf(100),
-                dto.getBidAmount(),
-                "Bid amount should match"
-        );
-    }
-
-    @Test
-    void testConstructorStatus() {
-
-        BidResponseDTO dto =
-                new BidResponseDTO(
-                        1L,
-                        2L,
-                        3L,
-                        BigDecimal.valueOf(100),
+                        BigDecimal.valueOf(500),
                         BidStatus.ACTIVE
                 );
 

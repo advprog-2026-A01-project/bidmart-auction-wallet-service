@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
@@ -112,5 +113,50 @@ class AuctionServiceTest {
 
         verify(bidRepository)
                 .save(any(Bid.class));
+    }
+
+    @Test
+    void testPlaceBidAuctionNotFound() {
+
+        when(auctionRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                RuntimeException.class,
+                () -> auctionService.placeBid(
+                        99L,
+                        1L,
+                        BigDecimal.valueOf(100)
+                ),
+                "Should throw exception"
+        );
+    }
+
+    @Test
+    void testPlaceBidExtendsAuction() {
+
+        auction.setEndTime(
+                LocalDateTime.now().plusSeconds(30)
+        );
+
+        when(auctionRepository.findById(1L))
+                .thenReturn(Optional.of(auction));
+
+        when(bidRepository.save(any(Bid.class)))
+                .thenAnswer(invocation ->
+                        invocation.getArgument(0)
+                );
+
+        auctionService.placeBid(
+                1L,
+                2L,
+                BigDecimal.valueOf(200)
+        );
+
+        assertEquals(
+                AuctionStatus.EXTENDED,
+                auction.getStatus(),
+                "Auction should be extended"
+        );
     }
 }
