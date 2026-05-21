@@ -23,18 +23,30 @@ class AuctionValidationServiceTest {
 
         auction.setStatus(AuctionStatus.CLOSED);
 
-        InvalidBidException exception =
-                assertThrows(
-                        InvalidBidException.class,
-                        () -> validationService.validateAuction(auction),
-                        "Exception should be thrown when auction inactive"
-                );
-
-        assertEquals(
-                "Auction is no longer active",
-                exception.getMessage(),
-                "Exception message should match"
+        assertThrows(
+                InvalidBidException.class,
+                () -> validationService.validateAuction(auction),
+                "Exception should be thrown when auction inactive"
         );
+    }
+
+    @Test
+    void testValidateAuctionInactiveExceptionMessage() {
+
+        Auction auction = new Auction();
+
+        auction.setStatus(AuctionStatus.CLOSED);
+
+        try {
+            validationService.validateAuction(auction);
+        } catch (InvalidBidException exception) {
+
+            assertEquals(
+                    "Auction is no longer active",
+                    exception.getMessage(),
+                    "Exception message should match"
+            );
+        }
     }
 
     @Test
@@ -48,18 +60,34 @@ class AuctionValidationServiceTest {
                 LocalDateTime.now().minusMinutes(1)
         );
 
-        InvalidBidException exception =
-                assertThrows(
-                        InvalidBidException.class,
-                        () -> validationService.validateAuction(auction),
-                        "Exception should be thrown when auction expired"
-                );
-
-        assertEquals(
-                "Auction has already closed",
-                exception.getMessage(),
-                "Exception message should match"
+        assertThrows(
+                InvalidBidException.class,
+                () -> validationService.validateAuction(auction),
+                "Exception should be thrown when auction expired"
         );
+    }
+
+    @Test
+    void testValidateAuctionExpiredExceptionMessage() {
+
+        Auction auction = new Auction();
+
+        auction.setStatus(AuctionStatus.ACTIVE);
+
+        auction.setEndTime(
+                LocalDateTime.now().minusMinutes(1)
+        );
+
+        try {
+            validationService.validateAuction(auction);
+        } catch (InvalidBidException exception) {
+
+            assertEquals(
+                    "Auction has already closed",
+                    exception.getMessage(),
+                    "Exception message should match"
+            );
+        }
     }
 
     @Test
@@ -92,21 +120,42 @@ class AuctionValidationServiceTest {
                 BigDecimal.valueOf(10)
         );
 
-        InvalidBidException exception =
-                assertThrows(
-                        InvalidBidException.class,
-                        () -> validationService.validateBidAmount(
-                                auction,
-                                BigDecimal.valueOf(105)
-                        ),
-                        "Exception should be thrown for invalid bid"
-                );
-
-        assertEquals(
-                "Bid amount must be at least 110",
-                exception.getMessage(),
-                "Exception message should match"
+        assertThrows(
+                InvalidBidException.class,
+                () -> validationService.validateBidAmount(
+                        auction,
+                        BigDecimal.valueOf(105)
+                ),
+                "Exception should be thrown for invalid bid"
         );
+    }
+
+    @Test
+    void testValidateBidAmountExceptionMessage() {
+
+        Auction auction = new Auction();
+
+        auction.setCurrentHighestBid(
+                BigDecimal.valueOf(100)
+        );
+
+        auction.setMinimumIncrement(
+                BigDecimal.valueOf(10)
+        );
+
+        try {
+            validationService.validateBidAmount(
+                    auction,
+                    BigDecimal.valueOf(105)
+            );
+        } catch (InvalidBidException exception) {
+
+            assertEquals(
+                    "Bid amount must be at least 110",
+                    exception.getMessage(),
+                    "Exception message should match"
+            );
+        }
     }
 
     @Test

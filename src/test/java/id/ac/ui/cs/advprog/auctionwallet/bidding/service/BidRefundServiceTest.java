@@ -25,6 +25,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class BidRefundServiceTest {
 
+    private static final String REFERENCE_ID =
+            "REF-1";
+
     @Mock
     private BidRepository bidRepository;
 
@@ -51,7 +54,7 @@ class BidRefundServiceTest {
     }
 
     @Test
-    void testRefundPreviousBidderSuccess() {
+    void testRefundPreviousBidderSavesBidTwice() {
 
         Bid previousBid = new Bid();
 
@@ -67,38 +70,70 @@ class BidRefundServiceTest {
 
         refundService.refundPreviousBidder(
                 auction,
-                "REF-1"
+                REFERENCE_ID
         );
 
         verify(bidRepository, times(2))
                 .save(previousBid);
+    }
+
+    @Test
+    void testRefundPreviousBidderReleasesWalletBalance() {
+
+        Bid previousBid = new Bid();
+
+        previousBid.setStatus(BidStatus.ACTIVE);
+
+        when(
+                bidRepository
+                        .findTopByAuctionIdAndStatusOrderByBidAmountDesc(
+                                1L,
+                                BidStatus.ACTIVE
+                        )
+        ).thenReturn(Optional.of(previousBid));
+
+        refundService.refundPreviousBidder(
+                auction,
+                REFERENCE_ID
+        );
 
         verify(walletService)
                 .releaseFromBid(
                         "2",
                         BigDecimal.valueOf(200),
-                        "REF-1"
+                        REFERENCE_ID
                 );
     }
 
     @Test
-    void testRefundPreviousBidderReturnsWhenNoHighestBidder() {
+    void testRefundPreviousBidderDoesNothingWhenNoHighestBidder() {
 
         auction.setCurrentHighestBidderId(null);
 
         refundService.refundPreviousBidder(
                 auction,
-                "REF-1"
+                REFERENCE_ID
         );
 
         verifyNoInteractions(walletService);
+    }
+
+    @Test
+    void testRefundPreviousBidderDoesNotSaveWhenNoHighestBidder() {
+
+        auction.setCurrentHighestBidderId(null);
+
+        refundService.refundPreviousBidder(
+                auction,
+                REFERENCE_ID
+        );
 
         verify(bidRepository, never())
                 .save(any(Bid.class));
     }
 
     @Test
-    void testRefundPreviousBidderReturnsWhenNoPreviousBid() {
+    void testRefundPreviousBidderDoesNotReleaseWalletWhenNoBid() {
 
         when(
                 bidRepository
@@ -110,7 +145,7 @@ class BidRefundServiceTest {
 
         refundService.refundPreviousBidder(
                 auction,
-                "REF-1"
+                REFERENCE_ID
         );
 
         verify(walletService, never())
