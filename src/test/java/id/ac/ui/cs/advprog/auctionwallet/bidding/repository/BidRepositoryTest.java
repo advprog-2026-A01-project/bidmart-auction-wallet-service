@@ -19,6 +19,7 @@ class BidRepositoryTest {
     private BidRepository bidRepository;
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void testFindTopBid() {
 
         Bid bid1 = new Bid();
@@ -45,11 +46,15 @@ class BidRepositoryTest {
                                 BidStatus.ACTIVE
                         );
 
-        assertTrue(result.isPresent());
+        assertTrue(
+                result.isPresent(),
+                "Top bid should exist"
+        );
 
         assertEquals(
                 BigDecimal.valueOf(200),
-                result.get().getBidAmount()
+                result.get().getBidAmount(),
+                "Highest bid amount should be 200"
         );
     }
 }

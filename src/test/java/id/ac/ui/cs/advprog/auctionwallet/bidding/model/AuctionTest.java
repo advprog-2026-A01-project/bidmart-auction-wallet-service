@@ -16,7 +16,10 @@ class AuctionTest {
         Auction auction = new Auction();
         auction.setStatus(AuctionStatus.ACTIVE);
 
-        assertTrue(auction.isBiddable());
+        assertTrue(
+                auction.isBiddable(),
+                "Auction should be biddable when status is ACTIVE"
+        );
     }
 
     @Test
@@ -25,7 +28,10 @@ class AuctionTest {
         Auction auction = new Auction();
         auction.setStatus(AuctionStatus.CLOSED);
 
-        assertFalse(auction.isBiddable());
+        assertFalse(
+                auction.isBiddable(),
+                "Auction should not be biddable when status is CLOSED"
+        );
     }
 
     @Test
@@ -38,7 +44,8 @@ class AuctionTest {
         );
 
         assertTrue(
-                auction.isExpired(LocalDateTime.now())
+                auction.isExpired(LocalDateTime.now()),
+                "Auction should be expired"
         );
     }
 
@@ -57,11 +64,13 @@ class AuctionTest {
 
         assertEquals(
                 BigDecimal.valueOf(110),
-                auction.getMinimumRequiredBid()
+                auction.getMinimumRequiredBid(),
+                "Minimum required bid should be highest bid plus increment"
         );
     }
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void testUpdateHighestBid() {
 
         Auction auction = new Auction();
@@ -73,12 +82,14 @@ class AuctionTest {
 
         assertEquals(
                 1L,
-                auction.getCurrentHighestBidderId()
+                auction.getCurrentHighestBidderId(),
+                "Highest bidder ID should be updated"
         );
 
         assertEquals(
                 BigDecimal.valueOf(500),
-                auction.getCurrentHighestBid()
+                auction.getCurrentHighestBid(),
+                "Highest bid amount should be updated"
         );
     }
 
@@ -91,7 +102,8 @@ class AuctionTest {
 
         assertEquals(
                 AuctionStatus.CLOSED,
-                auction.getStatus()
+                auction.getStatus(),
+                "Auction status should be CLOSED"
         );
     }
 }

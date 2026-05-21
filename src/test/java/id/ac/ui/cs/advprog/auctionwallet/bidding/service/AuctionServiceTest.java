@@ -10,15 +10,23 @@ import id.ac.ui.cs.advprog.auctionwallet.wallet.service.WalletService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuctionServiceTest {
@@ -49,19 +57,26 @@ class AuctionServiceTest {
         auction = new Auction();
 
         auction.setId(1L);
-        auction.setStatus(AuctionStatus.ACTIVE);
+
+        auction.setStatus(
+                AuctionStatus.ACTIVE
+        );
+
         auction.setCurrentHighestBid(
                 BigDecimal.valueOf(100)
         );
+
         auction.setMinimumIncrement(
                 BigDecimal.valueOf(10)
         );
+
         auction.setEndTime(
                 LocalDateTime.now().plusMinutes(10)
         );
     }
 
     @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void testPlaceBidSuccess() {
 
         when(auctionRepository.findById(1L))
@@ -81,7 +96,8 @@ class AuctionServiceTest {
 
         assertEquals(
                 BigDecimal.valueOf(150),
-                response.getBidAmount()
+                response.getBidAmount(),
+                "Bid amount should be 150"
         );
 
         verify(walletService)

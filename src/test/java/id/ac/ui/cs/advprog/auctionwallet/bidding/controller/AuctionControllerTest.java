@@ -37,7 +37,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = {
         "gateway.secret=local-dev-gateway-secret"
 })
-@SuppressWarnings("deprecation")
+@SuppressWarnings({
+        "deprecation",
+        "PMD.UnitTestShouldIncludeAssert"
+})
 class AuctionControllerTest {
 
     @Autowired

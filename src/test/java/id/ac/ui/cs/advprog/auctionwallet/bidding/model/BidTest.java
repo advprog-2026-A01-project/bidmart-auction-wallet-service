@@ -16,7 +16,8 @@ class BidTest {
 
         assertEquals(
                 BidStatus.ACTIVE,
-                bid.getStatus()
+                bid.getStatus(),
+                "Bid status should be ACTIVE"
         );
     }
 
@@ -29,7 +30,8 @@ class BidTest {
 
         assertEquals(
                 BidStatus.OUTBID,
-                bid.getStatus()
+                bid.getStatus(),
+                "Bid status should be OUTBID"
         );
     }
 
@@ -42,7 +44,8 @@ class BidTest {
 
         assertEquals(
                 BidStatus.REFUNDED,
-                bid.getStatus()
+                bid.getStatus(),
+                "Bid status should be REFUNDED"
         );
     }
 
@@ -53,6 +56,9 @@ class BidTest {
 
         bid.markAsActive();
 
-        assertTrue(bid.isActive());
+        assertTrue(
+                bid.isActive(),
+                "Bid should be active"
+        );
     }
 }
