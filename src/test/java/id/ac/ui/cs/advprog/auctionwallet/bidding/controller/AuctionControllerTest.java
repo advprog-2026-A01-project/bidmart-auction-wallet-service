@@ -5,6 +5,9 @@ import id.ac.ui.cs.advprog.auctionwallet.bidding.dto.BidRequestDTO;
 import id.ac.ui.cs.advprog.auctionwallet.bidding.dto.BidResponseDTO;
 import id.ac.ui.cs.advprog.auctionwallet.bidding.enums.BidStatus;
 import id.ac.ui.cs.advprog.auctionwallet.bidding.service.AuctionService;
+import id.ac.ui.cs.advprog.auctionwallet.bidding.model.Auction;
+import java.util.List;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +31,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -97,5 +101,41 @@ class AuctionControllerTest {
                         .value(200))
                 .andExpect(jsonPath("$.status")
                         .value("ACTIVE"));
+    }
+
+    @Test
+    void testGetAllAuctionsEndpoint() throws Exception {
+        Auction auction = new Auction();
+        auction.setId(1L);
+        auction.setCurrentHighestBid(BigDecimal.valueOf(100));
+        auction.setMinimumIncrement(BigDecimal.valueOf(10));
+        auction.setStatus(BidStatus.ACTIVE == null ? null : id.ac.ui.cs.advprog.auctionwallet.bidding.enums.AuctionStatus.ACTIVE);
+        when(auctionService.getAllAuctions()).thenReturn(Collections.singletonList(auction));
+
+        mockMvc.perform(
+                        get("/api/auctions")
+                                .header("X-Gateway-Secret", "local-dev-gateway-secret")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+    @Test
+    void testGetAuctionByIdEndpoint() throws Exception {
+        Auction auction = new Auction();
+        auction.setId(1L);
+        auction.setCurrentHighestBid(BigDecimal.valueOf(100));
+        auction.setMinimumIncrement(BigDecimal.valueOf(10));
+        auction.setStatus(id.ac.ui.cs.advprog.auctionwallet.bidding.enums.AuctionStatus.ACTIVE);
+        when(auctionService.getAuctionById(1L)).thenReturn(auction);
+
+        mockMvc.perform(
+                        get("/api/auctions/1")
+                                .header("X-Gateway-Secret", "local-dev-gateway-secret")
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
     }
 }
