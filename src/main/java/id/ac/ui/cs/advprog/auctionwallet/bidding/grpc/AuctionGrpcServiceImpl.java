@@ -111,7 +111,7 @@ public class AuctionGrpcServiceImpl extends AuctionGrpcServiceGrpc.AuctionGrpcSe
                     .setSuccess(true)
                     .setStatus(auction.getStatus().name())
                     .setMessage(AUCTION_CLOSED_MSG)
-                    .build());;
+                    .build());
             responseObserver.onCompleted();
         } catch (AuctionNotFoundException e) {
             responseObserver.onError(
