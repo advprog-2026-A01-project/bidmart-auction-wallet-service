@@ -159,4 +159,30 @@ class AuctionServiceTest {
                 "Auction should be extended"
         );
     }
+
+    @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
+    void testGetAllAuctions() {
+        when(auctionRepository.findAll()).thenReturn(java.util.List.of(auction));
+        java.util.List<Auction> result = auctionService.getAllAuctions();
+        assertEquals(1, result.size(), "Result size should be 1");
+        assertEquals(auction, result.get(0), "Result should contain the mocked auction");
+    }
+
+    @Test
+    void testGetAuctionByIdSuccess() {
+        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
+        Auction result = auctionService.getAuctionById(1L);
+        assertEquals(auction, result, "Result should be the mocked auction");
+    }
+
+    @Test
+    void testGetAuctionByIdNotFound() {
+        when(auctionRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(
+                id.ac.ui.cs.advprog.auctionwallet.bidding.exception.AuctionNotFoundException.class,
+                () -> auctionService.getAuctionById(99L),
+                "Should throw AuctionNotFoundException"
+        );
+    }
 }

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,15 @@ public class AuctionService {
     private final WalletService walletService;
     private final AuctionValidationService validationService;
     private final BidRefundService bidRefundService;
+
+    public List<Auction> getAllAuctions() {
+        return auctionRepository.findAll();
+    }
+
+    public Auction getAuctionById(Long auctionId) {
+        return auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new AuctionNotFoundException(auctionId));
+    }
 
     @Transactional
     public BidResponseDTO placeBid(
