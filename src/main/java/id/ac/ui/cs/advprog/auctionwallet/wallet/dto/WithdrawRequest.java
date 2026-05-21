@@ -1,13 +1,9 @@
 package id.ac.ui.cs.advprog.auctionwallet.wallet.dto;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
-import java.math.BigDecimal;
+import lombok.EqualsAndHashCode;
 
 @Data
-public class WithdrawRequest {
-    @NotNull(message = "Amount is required")
-    @Positive(message = "Amount must be positive")
-    private BigDecimal amount;
+@EqualsAndHashCode(callSuper = true)
+public class WithdrawRequest extends AmountRequest {
 }

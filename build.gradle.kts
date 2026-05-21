@@ -7,6 +7,7 @@ plugins {
     id("pmd")
     id("jacoco")
     id("org.sonarqube") version "4.4.1.3373"
+    id("com.google.protobuf") version "0.9.4"
 }
 
 group = "id.ac.ui.cs.advprog"
@@ -30,6 +31,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-amqp")
     runtimeOnly("org.postgresql:postgresql")
 
+    implementation("net.devh:grpc-spring-boot-starter:3.1.0.RELEASE")
+    implementation("io.grpc:grpc-stub:1.63.0")
+    implementation("io.grpc:grpc-protobuf:1.63.0")
+    implementation("com.google.protobuf:protobuf-java:3.25.3")
+    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
+    implementation("javax.annotation:javax.annotation-api:1.3.2")
+
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
@@ -39,9 +47,27 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("io.grpc:grpc-testing:1.63.0")
     testRuntimeOnly("com.h2database:h2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.25.3"
+    }
+    plugins {
+        create("grpc") {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.63.0"
+        }
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.plugins {
+                create("grpc")
+            }
+        }
+    }
 }
 
 pmd {

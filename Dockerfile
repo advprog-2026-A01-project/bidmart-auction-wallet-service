@@ -11,6 +11,7 @@ WORKDIR /app
 COPY --from=build /app/build/libs/*.jar app.jar
 
 EXPOSE 8083
+EXPOSE 9090
 
 ENV JAVA_OPTS=""
 
