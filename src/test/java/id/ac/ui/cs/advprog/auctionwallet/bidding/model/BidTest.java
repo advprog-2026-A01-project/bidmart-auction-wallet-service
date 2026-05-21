@@ -108,4 +108,24 @@ class BidTest {
                 "Timestamp should match"
         );
     }
+
+    @Test
+    void testIsActiveReturnsFalse() {
+        Bid bid = new Bid();
+        bid.markAsOutbid();
+        assertFalse(
+                bid.isActive(),
+                "Bid should not be active"
+        );
+    }
+
+    @Test
+    void testIsRefundedReturnsFalse() {
+        Bid bid = new Bid();
+        bid.markAsActive();
+        assertFalse(
+                bid.isRefunded(),
+                "Bid should not be refunded"
+        );
+    }
 }
