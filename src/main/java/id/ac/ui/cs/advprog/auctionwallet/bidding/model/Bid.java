@@ -27,10 +27,6 @@ public class Bid {
     @Enumerated(EnumType.STRING)
     private BidStatus status;
 
-    // =========================
-    // BUSINESS METHODS
-    // =========================
-
     public void markAsActive() {
         this.status = BidStatus.ACTIVE;
     }
