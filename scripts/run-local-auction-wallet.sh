@@ -26,6 +26,7 @@ export SPRING_RABBITMQ_USERNAME="guest"
 export SPRING_RABBITMQ_PASSWORD="guest"
 
 export GATEWAY_SECRET="${GATEWAY_SECRET:-local-dev-gateway-secret}"
+export AUTH_SERVICE_URL="${AUTH_SERVICE_URL:-http://localhost:8081}"
 
 export SERVER_PORT="8083"
 
