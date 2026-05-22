@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -31,17 +30,8 @@ public class AuctionService {
     private final AuctionValidationService validationService;
     private final BidRefundService bidRefundService;
 
-    @Transactional(readOnly = true)
     public List<Auction> getAllAuctions() {
-        List<Long> auctionIds = auctionRepository.findAllIds();
-        List<Auction> auctions = new ArrayList<>();
-
-        for (Long auctionId : auctionIds) {
-            auctionRepository.findById(auctionId)
-                    .ifPresent(auctions::add);
-        }
-
-        return auctions;
+        return auctionRepository.findAll();
     }
 
     public Auction getAuctionById(Long auctionId) {

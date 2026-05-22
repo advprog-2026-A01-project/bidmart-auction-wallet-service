@@ -31,11 +31,11 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({
-    "PMD.TooManyMethods",
-    "PMD.AvoidDuplicateLiterals",
-    "PMD.UnitTestContainsTooManyAsserts",
-    "PMD.UnitTestAssertionsShouldIncludeMessage",
-    "PMD.UnitTestShouldIncludeAssert"
+        "PMD.TooManyMethods",
+        "PMD.AvoidDuplicateLiterals",
+        "PMD.UnitTestContainsTooManyAsserts",
+        "PMD.UnitTestAssertionsShouldIncludeMessage",
+        "PMD.UnitTestShouldIncludeAssert"
 })
 class AuctionServiceTest {
 
@@ -170,11 +170,8 @@ class AuctionServiceTest {
     @Test
     @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void testGetAllAuctions() {
-        when(auctionRepository.findAllIds()).thenReturn(java.util.List.of(1L));
-        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
-
+        when(auctionRepository.findAll()).thenReturn(java.util.List.of(auction));
         java.util.List<Auction> result = auctionService.getAllAuctions();
-
         assertEquals(1, result.size(), "Result size should be 1");
         assertEquals(auction, result.get(0), "Result should contain the mocked auction");
     }
