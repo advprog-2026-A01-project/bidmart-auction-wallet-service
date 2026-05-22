@@ -170,8 +170,11 @@ class AuctionServiceTest {
     @Test
     @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
     void testGetAllAuctions() {
-        when(auctionRepository.findAll()).thenReturn(java.util.List.of(auction));
+        when(auctionRepository.findAllIds()).thenReturn(java.util.List.of(1L));
+        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
+
         java.util.List<Auction> result = auctionService.getAllAuctions();
+
         assertEquals(1, result.size(), "Result size should be 1");
         assertEquals(auction, result.get(0), "Result should contain the mocked auction");
     }
