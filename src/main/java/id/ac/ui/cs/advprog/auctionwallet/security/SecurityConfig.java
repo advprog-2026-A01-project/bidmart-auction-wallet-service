@@ -11,9 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@SuppressWarnings("java:S4502") // CSRF disabled intentionally: this service uses stateless JWT-based authentication.
-// All endpoints are either protected by JWT or gated by an internal gateway secret header.
-// CSRF tokens are only needed for session-based (cookie) auth, which is not used here.
+@SuppressWarnings("java:S4502") 
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -29,7 +27,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/api/auctions/**").authenticated()
+                .requestMatchers("/api/auctions/**").permitAll()
                 .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

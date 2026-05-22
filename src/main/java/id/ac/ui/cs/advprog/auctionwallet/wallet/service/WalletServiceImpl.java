@@ -8,26 +8,34 @@ import id.ac.ui.cs.advprog.auctionwallet.wallet.model.Wallet;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.model.WalletTransaction;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.repository.WalletRepository;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.repository.WalletTransactionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class WalletServiceImpl implements WalletService {
 
+    private static final Logger log = LoggerFactory.getLogger(WalletServiceImpl.class);
     private static final String WALLET_NOT_FOUND = "Wallet not found for user";
 
     private final WalletRepository walletRepository;
     private final WalletTransactionRepository transactionRepository;
     private final WalletEventPublisher eventPublisher;
+    private final HoldForBidExecutor holdForBidExecutor;
 
     public WalletServiceImpl(WalletRepository walletRepository,
                              WalletTransactionRepository transactionRepository,
-                             WalletEventPublisher eventPublisher) {
+                             WalletEventPublisher eventPublisher,
+                             HoldForBidExecutor holdForBidExecutor) {
         this.walletRepository = walletRepository;
         this.transactionRepository = transactionRepository;
         this.eventPublisher = eventPublisher;
+        this.holdForBidExecutor = holdForBidExecutor;
     }
 
     @Override
@@ -56,10 +64,18 @@ public class WalletServiceImpl implements WalletService {
     }
 
     @Override
-    @Transactional
     public void holdForBid(String userId, BigDecimal amount, String referenceId) {
-        executeWalletTransaction(userId, amount, referenceId, TransactionType.HOLD,
-                wallet -> wallet.holdBalance(amount));
+        long startNano = System.nanoTime();
+        BigDecimal newBalance = holdForBidExecutor.execute(userId, amount, referenceId);
+        eventPublisher.publishBalanceChangeEvent(
+                userId, TransactionType.HOLD, amount, newBalance);
+
+        if (log.isInfoEnabled()) {
+            // Fix: Sanitize user-controlled variables before logging
+            log.info("holdForBid completed for user={} referenceId={} in {} ms",
+                    sanitizeForLog(userId), sanitizeForLog(referenceId),
+                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNano));
+        }
     }
 
     @Override
@@ -98,6 +114,13 @@ public class WalletServiceImpl implements WalletService {
                 userId, type, amount, balanceBefore, wallet.getAvailableBalance(), referenceId));
         eventPublisher.publishBalanceChangeEvent(
                 userId, type, amount, wallet.getAvailableBalance());
+    }
+
+    private String sanitizeForLog(String input) {
+        if (input == null) {
+            return "null";
+        }
+        return input.replaceAll("[\r\n]", "_");
     }
 
     @FunctionalInterface

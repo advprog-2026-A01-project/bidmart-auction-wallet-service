@@ -69,6 +69,9 @@ dependencies {
     testImplementation("io.grpc:grpc-testing:$grpcVersion")
     testRuntimeOnly("com.h2database:h2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 }
 
 protobuf {
