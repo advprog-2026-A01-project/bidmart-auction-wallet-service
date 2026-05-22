@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 @Component
-@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidCatchingGenericException"})
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidCatchingGenericException", "PMD.GuardLogStatement"})
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
