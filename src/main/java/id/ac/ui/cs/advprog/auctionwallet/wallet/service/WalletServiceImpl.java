@@ -71,8 +71,9 @@ public class WalletServiceImpl implements WalletService {
                 userId, TransactionType.HOLD, amount, newBalance);
 
         if (log.isInfoEnabled()) {
+            // Fix: Sanitize user-controlled variables before logging
             log.info("holdForBid completed for user={} referenceId={} in {} ms",
-                    userId, referenceId,
+                    sanitizeForLog(userId), sanitizeForLog(referenceId),
                     TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNano));
         }
     }
@@ -113,6 +114,13 @@ public class WalletServiceImpl implements WalletService {
                 userId, type, amount, balanceBefore, wallet.getAvailableBalance(), referenceId));
         eventPublisher.publishBalanceChangeEvent(
                 userId, type, amount, wallet.getAvailableBalance());
+    }
+
+    private String sanitizeForLog(String input) {
+        if (input == null) {
+            return "null";
+        }
+        return input.replaceAll("[\r\n]", "_");
     }
 
     @FunctionalInterface
