@@ -28,16 +28,21 @@ import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import java.math.BigDecimal;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @GrpcService
-@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidDuplicateLiterals", "PMD.AvoidCatchingGenericException", "PMD.CouplingBetweenObjects"})
+@SuppressWarnings({"PMD.LawOfDemeter", "PMD.AvoidDuplicateLiterals", "PMD.AvoidCatchingGenericException", "PMD.CouplingBetweenObjects", "PMD.ExcessiveImports"})
 public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServiceImplBase {
+
+    private static final Logger log = LoggerFactory.getLogger(WalletGrpcServiceImpl.class);
 
     private static final String FUNDS_HELD_MSG      = "Funds held successfully";
     private static final String FUNDS_RELEASED_MSG  = "Funds released successfully";
     private static final String FUNDS_SETTLED_MSG   = "Payment settled successfully";
     private static final String TOP_UP_MSG          = "Top-up successful";
     private static final String WITHDRAW_MSG        = "Withdrawal successful";
+    private static final String GRPC_ERROR_MSG      = "An error occurred during gRPC execution";
 
     private final WalletService walletService;
 
@@ -56,6 +61,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
                     .build());
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error(GRPC_ERROR_MSG, e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -73,6 +79,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
                     .build());
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error(GRPC_ERROR_MSG, e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -94,6 +101,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onError(
                     Status.NOT_FOUND.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         } catch (Exception e) {
+            log.error(GRPC_ERROR_MSG, e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -118,6 +126,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onError(
                     Status.FAILED_PRECONDITION.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         } catch (Exception e) {
+            log.error(GRPC_ERROR_MSG, e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -143,6 +152,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
         } catch (Exception e) {
+            log.error(GRPC_ERROR_MSG, e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -168,6 +178,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onError(
                     Status.FAILED_PRECONDITION.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         } catch (Exception e) {
+            log.error(GRPC_ERROR_MSG, e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -193,6 +204,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onError(
                     Status.FAILED_PRECONDITION.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         } catch (Exception e) {
+            log.error(GRPC_ERROR_MSG, e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -218,6 +230,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onError(
                     Status.FAILED_PRECONDITION.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         } catch (Exception e) {
+            log.error(GRPC_ERROR_MSG, e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
