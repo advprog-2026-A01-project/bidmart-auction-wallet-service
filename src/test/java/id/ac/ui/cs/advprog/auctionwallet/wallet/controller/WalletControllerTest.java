@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = WalletController.class)
-@Import({GatewaySecretInterceptor.class, GlobalExceptionHandler.class})
+@Import({GatewaySecretInterceptor.class, GlobalExceptionHandler.class, id.ac.ui.cs.advprog.auctionwallet.security.SecurityConfig.class})
 @TestPropertySource(properties = {"gateway.secret=local-dev-gateway-secret"})
 @SuppressWarnings({
     "PMD.UnitTestShouldIncludeAssert",
