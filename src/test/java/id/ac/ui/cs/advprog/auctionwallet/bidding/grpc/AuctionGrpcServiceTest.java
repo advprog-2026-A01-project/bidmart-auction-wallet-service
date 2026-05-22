@@ -223,4 +223,42 @@ class AuctionGrpcServiceTest {
                 () -> stub.closeAuction(request));
         assertEquals(io.grpc.Status.Code.NOT_FOUND, ex.getStatus().getCode());
     }
+
+    @Test
+    void testGetAuctionStatusWithNoHighestBidderReturnsZero() {
+        Auction auction = buildAuction(AuctionStatus.ACTIVE, null);
+        when(auctionService.getAuctionById(AUCTION_ID)).thenReturn(auction);
+
+        GetAuctionStatusResponse response = stub.getAuctionStatus(
+                GetAuctionStatusRequest.newBuilder().setAuctionId(AUCTION_ID).build());
+
+        assertEquals(0L, response.getCurrentHighestBidderId());
+        assertEquals("ACTIVE", response.getStatus());
+    }
+
+    @Test
+    void testGetAuctionStatusServiceExceptionMapsToInternal() {
+        when(auctionService.getAuctionById(anyLong()))
+                .thenThrow(new RuntimeException("unexpected error"));
+
+        GetAuctionStatusRequest request = GetAuctionStatusRequest.newBuilder()
+                .setAuctionId(AUCTION_ID).build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.getAuctionStatus(request));
+        assertEquals(io.grpc.Status.Code.INTERNAL, ex.getStatus().getCode());
+    }
+
+    @Test
+    void testCloseAuctionServiceExceptionMapsToInternal() {
+        when(auctionService.closeAuction(anyLong()))
+                .thenThrow(new RuntimeException("unexpected error"));
+
+        CloseAuctionRequest request = CloseAuctionRequest.newBuilder()
+                .setAuctionId(AUCTION_ID).build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.closeAuction(request));
+        assertEquals(io.grpc.Status.Code.INTERNAL, ex.getStatus().getCode());
+    }
 }

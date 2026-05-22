@@ -135,6 +135,12 @@ sonar {
         property("sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "https://sonarcloud.io")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
         property("sonar.exclusions", "**/grpc/**Proto*.java,**/grpc/**Grpc.java,build/generated/**")
-        property("sonar.coverage.exclusions", "**/id/ac/ui/cs/advprog/auctionwallet/grpc/**")
+        property(
+            "sonar.coverage.exclusions",
+            // Exclude generated gRPC stubs — not handwritten code
+            "**/id/ac/ui/cs/advprog/auctionwallet/grpc/**," +
+            // Exclude main application entry point — delegates to SpringApplication.run() only
+            "**/AuctionWalletApplication.java"
+        )
     }
 }
