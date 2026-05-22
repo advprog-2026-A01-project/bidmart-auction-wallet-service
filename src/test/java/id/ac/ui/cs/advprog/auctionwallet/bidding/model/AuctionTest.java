@@ -1,0 +1,153 @@
+package id.ac.ui.cs.advprog.auctionwallet.bidding.model;
+
+import id.ac.ui.cs.advprog.auctionwallet.bidding.enums.AuctionStatus;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class AuctionTest {
+
+    @Test
+    void testIsBiddableReturnsTrueWhenActive() {
+
+        Auction auction = new Auction();
+        auction.setStatus(AuctionStatus.ACTIVE);
+
+        assertTrue(
+                auction.isBiddable(),
+                "Auction should be biddable when status is ACTIVE"
+        );
+    }
+
+    @Test
+    void testIsBiddableReturnsFalseWhenClosed() {
+
+        Auction auction = new Auction();
+        auction.setStatus(AuctionStatus.CLOSED);
+
+        assertFalse(
+                auction.isBiddable(),
+                "Auction should not be biddable when status is CLOSED"
+        );
+    }
+
+    @Test
+    void testIsExpiredReturnsTrue() {
+
+        Auction auction = new Auction();
+
+        auction.setEndTime(
+                LocalDateTime.now().minusMinutes(1)
+        );
+
+        assertTrue(
+                auction.isExpired(LocalDateTime.now()),
+                "Auction should be expired"
+        );
+    }
+
+    @Test
+    void testGetMinimumRequiredBid() {
+
+        Auction auction = new Auction();
+
+        auction.setCurrentHighestBid(
+                BigDecimal.valueOf(100)
+        );
+
+        auction.setMinimumIncrement(
+                BigDecimal.valueOf(10)
+        );
+
+        assertEquals(
+                BigDecimal.valueOf(110),
+                auction.getMinimumRequiredBid(),
+                "Minimum required bid should be highest bid plus increment"
+        );
+    }
+
+    @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
+    void testUpdateHighestBid() {
+
+        Auction auction = new Auction();
+
+        auction.updateHighestBid(
+                1L,
+                BigDecimal.valueOf(500)
+        );
+
+        assertEquals(
+                1L,
+                auction.getCurrentHighestBidderId(),
+                "Highest bidder ID should be updated"
+        );
+
+        assertEquals(
+                BigDecimal.valueOf(500),
+                auction.getCurrentHighestBid(),
+                "Highest bid amount should be updated"
+        );
+    }
+
+    @Test
+    void testCloseAuction() {
+
+        Auction auction = new Auction();
+
+        auction.close();
+
+        assertEquals(
+                AuctionStatus.CLOSED,
+                auction.getStatus(),
+                "Auction status should be CLOSED"
+        );
+    }
+
+    @Test
+    void testExtendAuction() {
+
+        Auction auction = new Auction();
+
+        auction.extendAuction(10);
+
+        assertEquals(
+                AuctionStatus.EXTENDED,
+                auction.getStatus(),
+                "Status should become EXTENDED"
+        );
+    }
+
+    @Test
+    void testSetAndGetItemId() {
+
+        Auction auction = new Auction();
+
+        auction.setItemId(5L);
+
+        assertEquals(
+                5L,
+                auction.getItemId(),
+                "Item id should match"
+        );
+    }
+
+    @Test
+    void testSetAndGetStartingPrice() {
+
+        Auction auction = new Auction();
+
+        auction.setStartingPrice(
+                BigDecimal.valueOf(100)
+        );
+
+        assertEquals(
+                BigDecimal.valueOf(100),
+                auction.getStartingPrice(),
+                "Starting price should match"
+        );
+    }
+}
