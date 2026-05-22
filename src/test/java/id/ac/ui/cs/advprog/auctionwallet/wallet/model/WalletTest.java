@@ -33,16 +33,15 @@ class WalletTest {
 
     @Test
     void testAddBalanceNegativeThrowsException() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            wallet.addBalance(new BigDecimal("-100.00"));
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+                wallet.addBalance(new BigDecimal("-100.00")));
     }
 
     @Test
     void testHoldBalanceSuccess() {
         wallet.addBalance(new BigDecimal("100000.00"));
         wallet.holdBalance(new BigDecimal("40000.00"));
-        
+
         assertEquals(new BigDecimal("60000.00"), wallet.getAvailableBalance());
         assertEquals(new BigDecimal("40000.00"), wallet.getHeldBalance());
     }
@@ -50,10 +49,8 @@ class WalletTest {
     @Test
     void testHoldBalanceInsufficientFunds() {
         wallet.addBalance(new BigDecimal("50000.00"));
-        
-        assertThrows(IllegalArgumentException.class, () -> {
-            wallet.holdBalance(new BigDecimal("60000.00"));
-        });
+        assertThrows(IllegalArgumentException.class, () ->
+                wallet.holdBalance(new BigDecimal("60000.00")));
     }
 
     @Test

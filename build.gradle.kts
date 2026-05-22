@@ -1,5 +1,18 @@
 import org.gradle.api.plugins.quality.Pmd
 
+val springBootVersion: String by project
+val springDependencyManagementVersion: String by project
+val jjwtVersion: String by project
+val grpcVersion: String by project
+val protobufVersion: String by project
+val grpcSpringBootStarterVersion: String by project
+val protobufPluginVersion: String by project
+val jakartaAnnotationVersion: String by project
+val javaxAnnotationVersion: String by project
+val sonarqubePluginVersion: String by project
+val jacocoVersion: String by project
+val pmdVersion: String by project
+
 plugins {
     java
     id("org.springframework.boot") version "3.2.3"
@@ -27,9 +40,9 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
-    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+    implementation("io.jsonwebtoken:jjwt-api:$jjwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:$jjwtVersion")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:$jjwtVersion")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -37,12 +50,12 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-amqp")
     runtimeOnly("org.postgresql:postgresql")
 
-    implementation("net.devh:grpc-spring-boot-starter:3.1.0.RELEASE")
-    implementation("io.grpc:grpc-stub:1.63.0")
-    implementation("io.grpc:grpc-protobuf:1.63.0")
-    implementation("com.google.protobuf:protobuf-java:3.25.3")
-    implementation("jakarta.annotation:jakarta.annotation-api:2.1.1")
-    implementation("javax.annotation:javax.annotation-api:1.3.2")
+    implementation("net.devh:grpc-spring-boot-starter:$grpcSpringBootStarterVersion")
+    implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("io.grpc:grpc-protobuf:$grpcVersion")
+    implementation("com.google.protobuf:protobuf-java:$protobufVersion")
+    implementation("jakarta.annotation:jakarta.annotation-api:$jakartaAnnotationVersion")
+    implementation("javax.annotation:javax.annotation-api:$javaxAnnotationVersion")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
@@ -53,18 +66,18 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("io.grpc:grpc-testing:1.63.0")
+    testImplementation("io.grpc:grpc-testing:$grpcVersion")
     testRuntimeOnly("com.h2database:h2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.25.3"
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
     }
     plugins {
         create("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.63.0"
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
         }
     }
     generateProtoTasks {
@@ -79,7 +92,7 @@ protobuf {
 pmd {
     ruleSets = emptyList()
     isConsoleOutput = true
-    toolVersion = "7.11.0"
+    toolVersion = pmdVersion
 }
 
 tasks.withType<Pmd>().configureEach {
@@ -103,7 +116,7 @@ tasks.named<Pmd>("pmdTest") {
 }
 
 jacoco {
-    toolVersion = "0.8.13"
+    toolVersion = jacocoVersion
 }
 
 tasks.withType<Test> {
@@ -137,9 +150,7 @@ sonar {
         property("sonar.exclusions", "**/grpc/**Proto*.java,**/grpc/**Grpc.java,build/generated/**")
         property(
             "sonar.coverage.exclusions",
-            // Exclude generated gRPC stubs — not handwritten code
             "**/id/ac/ui/cs/advprog/auctionwallet/grpc/**," +
-            // Exclude main application entry point — delegates to SpringApplication.run() only
             "**/AuctionWalletApplication.java"
         )
     }

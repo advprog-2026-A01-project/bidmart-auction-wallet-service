@@ -12,7 +12,6 @@ import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Instant;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

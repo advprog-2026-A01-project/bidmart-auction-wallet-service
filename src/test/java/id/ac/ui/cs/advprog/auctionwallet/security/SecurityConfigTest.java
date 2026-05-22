@@ -3,12 +3,6 @@ package id.ac.ui.cs.advprog.auctionwallet.security;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.mock.web.MockFilterChain;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-
-import jakarta.servlet.ServletException;
-import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
