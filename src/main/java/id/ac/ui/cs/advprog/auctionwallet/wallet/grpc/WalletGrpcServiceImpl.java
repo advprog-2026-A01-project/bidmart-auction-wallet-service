@@ -56,6 +56,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
                     .build());
             responseObserver.onCompleted();
         } catch (Exception e) {
+            e.printStackTrace();
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -73,6 +74,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
                     .build());
             responseObserver.onCompleted();
         } catch (Exception e) {
+            e.printStackTrace();
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -94,6 +96,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onError(
                     Status.NOT_FOUND.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         } catch (Exception e) {
+            e.printStackTrace();
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -118,6 +121,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onError(
                     Status.FAILED_PRECONDITION.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         } catch (Exception e) {
+            e.printStackTrace();
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -143,6 +147,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
         } catch (Exception e) {
+            e.printStackTrace();
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -168,6 +173,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onError(
                     Status.FAILED_PRECONDITION.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         } catch (Exception e) {
+            e.printStackTrace();
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -193,6 +199,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onError(
                     Status.FAILED_PRECONDITION.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         } catch (Exception e) {
+            e.printStackTrace();
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }
@@ -218,6 +225,7 @@ public class WalletGrpcServiceImpl extends WalletGrpcServiceGrpc.WalletGrpcServi
             responseObserver.onError(
                     Status.FAILED_PRECONDITION.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         } catch (Exception e) {
+            e.printStackTrace();
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).withCause(e).asRuntimeException());
         }

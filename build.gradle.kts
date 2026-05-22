@@ -25,6 +25,11 @@ repositories {
 }
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -109,7 +114,7 @@ tasks.jacocoTestReport {
     dependsOn(tasks.test)
     classDirectories.setFrom(
         fileTree(layout.buildDirectory.dir("classes/java/main")) {
-            // Exclude auto-generated protobuf/gRPC classes – not hand-written code
+
             exclude(
                 "**/id/ac/ui/cs/advprog/auctionwallet/grpc/**"
             )
@@ -128,7 +133,6 @@ sonar {
         property("sonar.organization", "advprog-2026-a01-project-1")
         property("sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "https://sonarcloud.io")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
-        // Exclude auto-generated protobuf classes from Sonar analysis
         property("sonar.exclusions", "**/grpc/**Proto*.java,**/grpc/**Grpc.java,build/generated/**")
         property("sonar.coverage.exclusions", "**/id/ac/ui/cs/advprog/auctionwallet/grpc/**")
     }
