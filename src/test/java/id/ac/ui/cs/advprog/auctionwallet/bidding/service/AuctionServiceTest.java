@@ -31,11 +31,11 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings({
-    "PMD.TooManyMethods",
-    "PMD.AvoidDuplicateLiterals",
-    "PMD.UnitTestContainsTooManyAsserts",
-    "PMD.UnitTestAssertionsShouldIncludeMessage",
-    "PMD.UnitTestShouldIncludeAssert"
+        "PMD.TooManyMethods",
+        "PMD.AvoidDuplicateLiterals",
+        "PMD.UnitTestContainsTooManyAsserts",
+        "PMD.UnitTestAssertionsShouldIncludeMessage",
+        "PMD.UnitTestShouldIncludeAssert"
 })
 class AuctionServiceTest {
 
