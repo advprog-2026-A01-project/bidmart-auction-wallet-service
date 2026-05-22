@@ -107,6 +107,14 @@ tasks.withType<Test> {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
+    classDirectories.setFrom(
+        fileTree(layout.buildDirectory.dir("classes/java/main")) {
+            // Exclude auto-generated protobuf/gRPC classes – not hand-written code
+            exclude(
+                "**/id/ac/ui/cs/advprog/auctionwallet/grpc/**"
+            )
+        }
+    )
     reports {
         xml.required.set(true)
         html.required.set(true)
@@ -120,5 +128,8 @@ sonar {
         property("sonar.organization", "advprog-2026-a01-project-1")
         property("sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "https://sonarcloud.io")
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
+        // Exclude auto-generated protobuf classes from Sonar analysis
+        property("sonar.exclusions", "**/grpc/**Proto*.java,**/grpc/**Grpc.java,build/generated/**")
+        property("sonar.coverage.exclusions", "**/id/ac/ui/cs/advprog/auctionwallet/grpc/**")
     }
 }

@@ -30,6 +30,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings({
+    "PMD.TooManyMethods",
+    "PMD.AvoidDuplicateLiterals",
+    "PMD.UnitTestContainsTooManyAsserts",
+    "PMD.UnitTestAssertionsShouldIncludeMessage",
+    "PMD.UnitTestShouldIncludeAssert"
+})
 class AuctionServiceTest {
 
     @Mock
@@ -184,5 +191,110 @@ class AuctionServiceTest {
                 () -> auctionService.getAuctionById(99L),
                 "Should throw AuctionNotFoundException"
         );
+    }
+
+    @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
+    void testCreateAuctionSetsFieldsAndReturns() {
+        when(auctionRepository.save(any(Auction.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        java.time.LocalDateTime start = java.time.LocalDateTime.now().plusDays(1);
+        java.time.LocalDateTime end   = java.time.LocalDateTime.now().plusDays(2);
+
+        Auction result = auctionService.createAuction(
+                10L,
+                BigDecimal.valueOf(500),
+                BigDecimal.valueOf(50),
+                start,
+                end
+        );
+
+        assertEquals(10L, result.getItemId(), "Item ID should match");
+        assertEquals(BigDecimal.valueOf(500), result.getStartingPrice(), "Starting price should match");
+        assertEquals(id.ac.ui.cs.advprog.auctionwallet.bidding.enums.AuctionStatus.ACTIVE, result.getStatus(), "Status should be ACTIVE");
+        verify(auctionRepository).save(any(Auction.class));
+    }
+
+    @Test
+    void testCloseAuctionWithWinnerSettlesPayment() {
+        auction.setCurrentHighestBidderId(2L);
+        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
+        when(auctionRepository.save(any(Auction.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        Auction result = auctionService.closeAuction(1L);
+
+        assertEquals(id.ac.ui.cs.advprog.auctionwallet.bidding.enums.AuctionStatus.WON, result.getStatus(), "Status should be WON");
+        verify(walletService).payFromHeld(any(), any(), any());
+    }
+
+    @Test
+    void testCloseAuctionWithoutBidderSetsUnsold() {
+        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
+        when(auctionRepository.save(any(Auction.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        Auction result = auctionService.closeAuction(1L);
+
+        assertEquals(id.ac.ui.cs.advprog.auctionwallet.bidding.enums.AuctionStatus.UNSOLD, result.getStatus(), "Status should be UNSOLD");
+    }
+
+    @Test
+    void testCloseAuctionAlreadyTerminalReturnsImmediately() {
+        auction.setStatus(id.ac.ui.cs.advprog.auctionwallet.bidding.enums.AuctionStatus.WON);
+        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
+
+        Auction result = auctionService.closeAuction(1L);
+
+        assertEquals(id.ac.ui.cs.advprog.auctionwallet.bidding.enums.AuctionStatus.WON, result.getStatus(), "Should return without further state change");
+    }
+
+    @Test
+    void testCloseAuctionNotFoundThrows() {
+        when(auctionRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(
+                id.ac.ui.cs.advprog.auctionwallet.bidding.exception.AuctionNotFoundException.class,
+                () -> auctionService.closeAuction(99L)
+        );
+    }
+
+    @Test
+    @SuppressWarnings("PMD.UnitTestContainsTooManyAsserts")
+    void testCancelUserBidsCancelsActiveBidsAndReleasesWallet() {
+        id.ac.ui.cs.advprog.auctionwallet.bidding.model.Bid bid = new id.ac.ui.cs.advprog.auctionwallet.bidding.model.Bid();
+        bid.setAuctionId(1L);
+        bid.setUserId(2L);
+        bid.setBidAmount(BigDecimal.valueOf(200));
+        bid.markAsActive();
+
+        when(bidRepository.findByUserIdAndStatus(2L, id.ac.ui.cs.advprog.auctionwallet.bidding.enums.BidStatus.ACTIVE))
+                .thenReturn(java.util.List.of(bid));
+        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
+        when(bidRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        int count = auctionService.cancelUserBids(2L);
+
+        assertEquals(1, count, "Should cancel 1 bid");
+        verify(walletService).releaseFromBid(any(), any(), any());
+    }
+
+    @Test
+    void testCancelUserBidsSkipsTerminalAuctions() {
+        auction.setStatus(id.ac.ui.cs.advprog.auctionwallet.bidding.enums.AuctionStatus.WON);
+
+        id.ac.ui.cs.advprog.auctionwallet.bidding.model.Bid bid = new id.ac.ui.cs.advprog.auctionwallet.bidding.model.Bid();
+        bid.setAuctionId(1L);
+        bid.setUserId(2L);
+        bid.setBidAmount(BigDecimal.valueOf(200));
+        bid.markAsActive();
+
+        when(bidRepository.findByUserIdAndStatus(2L, id.ac.ui.cs.advprog.auctionwallet.bidding.enums.BidStatus.ACTIVE))
+                .thenReturn(java.util.List.of(bid));
+        when(auctionRepository.findById(1L)).thenReturn(Optional.of(auction));
+
+        int count = auctionService.cancelUserBids(2L);
+
+        assertEquals(0, count, "Terminal auction bids should be skipped");
     }
 }

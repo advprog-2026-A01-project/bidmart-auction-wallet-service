@@ -4,16 +4,24 @@ import id.ac.ui.cs.advprog.auctionwallet.grpc.CreateWalletRequest;
 import id.ac.ui.cs.advprog.auctionwallet.grpc.CreateWalletResponse;
 import id.ac.ui.cs.advprog.auctionwallet.grpc.GetBalanceRequest;
 import id.ac.ui.cs.advprog.auctionwallet.grpc.GetBalanceResponse;
+import id.ac.ui.cs.advprog.auctionwallet.grpc.GetHistoryRequest;
+import id.ac.ui.cs.advprog.auctionwallet.grpc.GetHistoryResponse;
 import id.ac.ui.cs.advprog.auctionwallet.grpc.HoldFundsRequest;
 import id.ac.ui.cs.advprog.auctionwallet.grpc.HoldFundsResponse;
 import id.ac.ui.cs.advprog.auctionwallet.grpc.ReleaseFundsRequest;
 import id.ac.ui.cs.advprog.auctionwallet.grpc.ReleaseFundsResponse;
 import id.ac.ui.cs.advprog.auctionwallet.grpc.SettleFundsRequest;
 import id.ac.ui.cs.advprog.auctionwallet.grpc.SettleFundsResponse;
+import id.ac.ui.cs.advprog.auctionwallet.grpc.TopUpRequest;
+import id.ac.ui.cs.advprog.auctionwallet.grpc.TopUpResponse;
 import id.ac.ui.cs.advprog.auctionwallet.grpc.WalletGrpcServiceGrpc;
+import id.ac.ui.cs.advprog.auctionwallet.grpc.WithdrawRequest;
+import id.ac.ui.cs.advprog.auctionwallet.grpc.WithdrawResponse;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.exception.InsufficientBalanceException;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.exception.WalletNotFoundException;
+import id.ac.ui.cs.advprog.auctionwallet.wallet.model.TransactionType;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.model.Wallet;
+import id.ac.ui.cs.advprog.auctionwallet.wallet.model.WalletTransaction;
 import id.ac.ui.cs.advprog.auctionwallet.wallet.service.WalletService;
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
@@ -29,6 +37,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -49,12 +58,13 @@ import static org.mockito.Mockito.when;
     "PMD.UnitTestAssertionsShouldIncludeMessage",
     "PMD.ExcessiveImports",
     "PMD.TooManyMethods",
-    "PMD.LawOfDemeter"
+    "PMD.LawOfDemeter",
+    "PMD.CouplingBetweenObjects"
 })
 class WalletGrpcServiceTest {
 
-    private static final String USER_ID       = "user-123";
-    private static final String AUC_ID        = "auc-001";
+    private static final String USER_ID              = "user-123";
+    private static final String AUC_ID               = "auc-001";
     private static final String WALLET_NOT_FOUND_MSG = "Wallet not found";
 
     @Mock
@@ -148,6 +158,141 @@ class WalletGrpcServiceTest {
 
         StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
                 () -> stub.getWalletBalance(request));
+
+        assertEquals(io.grpc.Status.Code.INTERNAL, ex.getStatus().getCode());
+    }
+
+    @Test
+    void testTopUpSuccess() {
+        Wallet wallet = new Wallet(USER_ID);
+        wallet.addBalance(new BigDecimal("150000.00"));
+        doNothing().when(walletService).topUp(eq(USER_ID), any(BigDecimal.class));
+        when(walletService.getWallet(USER_ID)).thenReturn(wallet);
+
+        TopUpResponse response = stub.topUp(
+                TopUpRequest.newBuilder().setUserId(USER_ID).setAmount("50000.00").build());
+
+        assertTrue(response.getSuccess());
+        assertEquals("Top-up successful", response.getMessage());
+    }
+
+    @Test
+    void testTopUpWalletNotFoundMapsToNotFound() {
+        doThrow(new WalletNotFoundException(WALLET_NOT_FOUND_MSG))
+                .when(walletService).topUp(any(), any());
+
+        TopUpRequest request = TopUpRequest.newBuilder()
+                .setUserId("unknown").setAmount("1000.00").build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.topUp(request));
+
+        assertEquals(io.grpc.Status.Code.NOT_FOUND, ex.getStatus().getCode());
+    }
+
+    @Test
+    void testTopUpServiceExceptionMapsToInternal() {
+        doThrow(new RuntimeException("DB error"))
+                .when(walletService).topUp(any(), any());
+
+        TopUpRequest request = TopUpRequest.newBuilder()
+                .setUserId(USER_ID).setAmount("1000.00").build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.topUp(request));
+
+        assertEquals(io.grpc.Status.Code.INTERNAL, ex.getStatus().getCode());
+    }
+
+    @Test
+    void testWithdrawSuccess() {
+        Wallet wallet = new Wallet(USER_ID);
+        wallet.addBalance(new BigDecimal("60000.00"));
+        doNothing().when(walletService).withdraw(eq(USER_ID), any(BigDecimal.class));
+        when(walletService.getWallet(USER_ID)).thenReturn(wallet);
+
+        WithdrawResponse response = stub.withdraw(
+                WithdrawRequest.newBuilder().setUserId(USER_ID).setAmount("40000.00").build());
+
+        assertTrue(response.getSuccess());
+        assertEquals("Withdrawal successful", response.getMessage());
+    }
+
+    @Test
+    void testWithdrawWalletNotFoundMapsToNotFound() {
+        doThrow(new WalletNotFoundException(WALLET_NOT_FOUND_MSG))
+                .when(walletService).withdraw(any(), any());
+
+        WithdrawRequest request = WithdrawRequest.newBuilder()
+                .setUserId("unknown").setAmount("100.00").build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.withdraw(request));
+
+        assertEquals(io.grpc.Status.Code.NOT_FOUND, ex.getStatus().getCode());
+    }
+
+    @Test
+    void testWithdrawInsufficientBalanceMapsToFailedPrecondition() {
+        doThrow(new InsufficientBalanceException("Insufficient balance"))
+                .when(walletService).withdraw(any(), any());
+
+        WithdrawRequest request = WithdrawRequest.newBuilder()
+                .setUserId(USER_ID).setAmount("999999.00").build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.withdraw(request));
+
+        assertEquals(io.grpc.Status.Code.FAILED_PRECONDITION, ex.getStatus().getCode());
+    }
+
+    @Test
+    void testWithdrawServiceExceptionMapsToInternal() {
+        doThrow(new RuntimeException("DB error"))
+                .when(walletService).withdraw(any(), any());
+
+        WithdrawRequest request = WithdrawRequest.newBuilder()
+                .setUserId(USER_ID).setAmount("100.00").build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.withdraw(request));
+
+        assertEquals(io.grpc.Status.Code.INTERNAL, ex.getStatus().getCode());
+    }
+
+    @Test
+    void testGetTransactionHistoryReturnsRecords() {
+        WalletTransaction tx = new WalletTransaction(
+                USER_ID, TransactionType.TOP_UP, new BigDecimal("50000"),
+                BigDecimal.ZERO, new BigDecimal("50000"), null);
+        when(walletService.getHistory(USER_ID)).thenReturn(List.of(tx));
+
+        GetHistoryResponse response = stub.getTransactionHistory(
+                GetHistoryRequest.newBuilder().setUserId(USER_ID).build());
+
+        assertEquals(USER_ID, response.getUserId());
+        assertEquals(1, response.getRecordsCount());
+        assertEquals("TOP_UP", response.getRecords(0).getTransactionType());
+    }
+
+    @Test
+    void testGetTransactionHistoryEmptyList() {
+        when(walletService.getHistory(USER_ID)).thenReturn(List.of());
+
+        GetHistoryResponse response = stub.getTransactionHistory(
+                GetHistoryRequest.newBuilder().setUserId(USER_ID).build());
+
+        assertEquals(0, response.getRecordsCount());
+    }
+
+    @Test
+    void testGetTransactionHistoryServiceExceptionMapsToInternal() {
+        when(walletService.getHistory(USER_ID)).thenThrow(new RuntimeException("DB error"));
+
+        GetHistoryRequest request = GetHistoryRequest.newBuilder().setUserId(USER_ID).build();
+
+        StatusRuntimeException ex = assertThrows(StatusRuntimeException.class,
+                () -> stub.getTransactionHistory(request));
 
         assertEquals(io.grpc.Status.Code.INTERNAL, ex.getStatus().getCode());
     }
