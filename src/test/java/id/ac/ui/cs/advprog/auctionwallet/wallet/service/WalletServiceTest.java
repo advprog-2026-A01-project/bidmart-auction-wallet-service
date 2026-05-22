@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,6 +47,13 @@ class WalletServiceTest {
     @Mock
     private WalletEventPublisher eventPublisher;
 
+    /**
+     * Mocked executor — keeps WalletServiceImpl tests focused on orchestration logic.
+     * The executor's own DB behaviour is tested in {@link HoldForBidExecutorTest}.
+     */
+    @Mock
+    private HoldForBidExecutor holdForBidExecutor;
+
     @InjectMocks
     private WalletServiceImpl walletService;
 
@@ -56,6 +64,8 @@ class WalletServiceTest {
         testWallet = new Wallet("user-123");
         testWallet.addBalance(new BigDecimal("100000.00"));
     }
+
+    // ── getWallet ─────────────────────────────────────────────────────────────
 
     @Test
     void testGetWalletReturnsExistingWallet() {
@@ -79,6 +89,8 @@ class WalletServiceTest {
         verify(walletRepository).save(any(Wallet.class));
     }
 
+    // ── topUp ─────────────────────────────────────────────────────────────────
+
     @Test
     void testTopUpSuccess() {
         when(walletRepository.findByUserIdWithLock("user-123")).thenReturn(Optional.of(testWallet));
@@ -99,6 +111,8 @@ class WalletServiceTest {
         assertThrows(WalletNotFoundException.class,
                 () -> walletService.topUp("unknown", new BigDecimal("1000.00")));
     }
+
+    // ── withdraw ──────────────────────────────────────────────────────────────
 
     @Test
     void testWithdrawSuccess() {
@@ -127,19 +141,27 @@ class WalletServiceTest {
                 () -> walletService.withdraw("user-123", new BigDecimal("999999.00")));
     }
 
+    // ── holdForBid ────────────────────────────────────────────────────────────
+    // holdForBid is tested at the WalletServiceImpl orchestration level.
+    // The executor's DB logic is covered by HoldForBidExecutorTest.
+
     @Test
-    void testHoldForBidSuccess() {
-        when(walletRepository.findByUserIdWithLock("user-123")).thenReturn(Optional.of(testWallet));
+    void testHoldForBidSuccess_delegatesToExecutorAndPublishesEvent() {
+        BigDecimal expectedNewBalance = new BigDecimal("70000.00");
+        when(holdForBidExecutor.execute("user-123", new BigDecimal("30000.00"), "auc-123"))
+                .thenReturn(expectedNewBalance);
 
         walletService.holdForBid("user-123", new BigDecimal("30000.00"), "auc-123");
 
-        assertEquals(new BigDecimal("70000.00"), testWallet.getAvailableBalance());
-        assertEquals(new BigDecimal("30000.00"), testWallet.getHeldBalance());
+        verify(holdForBidExecutor).execute("user-123", new BigDecimal("30000.00"), "auc-123");
+        verify(eventPublisher).publishBalanceChangeEvent(
+                "user-123", TransactionType.HOLD, new BigDecimal("30000.00"), expectedNewBalance);
     }
 
     @Test
     void testHoldForBidThrowsWhenWalletNotFound() {
-        when(walletRepository.findByUserIdWithLock("unknown")).thenReturn(Optional.empty());
+        when(holdForBidExecutor.execute(eq("unknown"), any(), any()))
+                .thenThrow(new WalletNotFoundException("Wallet not found for user: unknown"));
 
         assertThrows(WalletNotFoundException.class,
                 () -> walletService.holdForBid("unknown", new BigDecimal("100.00"), "auc-123"));
@@ -147,11 +169,26 @@ class WalletServiceTest {
 
     @Test
     void testHoldForBidThrowsWhenInsufficientBalance() {
-        when(walletRepository.findByUserIdWithLock("user-123")).thenReturn(Optional.of(testWallet));
+        when(holdForBidExecutor.execute(eq("user-123"), any(), any()))
+                .thenThrow(new InsufficientBalanceException("Insufficient balance"));
 
         assertThrows(InsufficientBalanceException.class,
                 () -> walletService.holdForBid("user-123", new BigDecimal("999999.00"), "auc-123"));
     }
+
+    @Test
+    void testHoldForBidThrowsWhenExecutorFails_doesNotPublishEvent() {
+        when(holdForBidExecutor.execute(eq("user-123"), any(), any()))
+                .thenThrow(new InsufficientBalanceException("Insufficient balance"));
+
+        assertThrows(InsufficientBalanceException.class,
+                () -> walletService.holdForBid("user-123", new BigDecimal("999999.00"), "auc-123"));
+
+        // Critical: event must NOT be published when the DB transaction failed.
+        verify(eventPublisher, never()).publishBalanceChangeEvent(any(), any(), any(), any());
+    }
+
+    // ── releaseFromBid ────────────────────────────────────────────────────────
 
     @Test
     void testReleaseFromBidSuccess() {
@@ -179,6 +216,8 @@ class WalletServiceTest {
         assertThrows(InsufficientBalanceException.class,
                 () -> walletService.releaseFromBid("user-123", new BigDecimal("50000.00"), "auc-123"));
     }
+
+    // ── payFromHeld ───────────────────────────────────────────────────────────
 
     @Test
     void testPayFromHeldSuccess() {
@@ -208,6 +247,8 @@ class WalletServiceTest {
                 () -> walletService.payFromHeld("user-123", new BigDecimal("50000.00"), "auc-123"));
     }
 
+    // ── getHistory ────────────────────────────────────────────────────────────
+
     @Test
     void testGetHistoryReturnsTransactions() {
         List<WalletTransaction> txList = List.of(
@@ -232,4 +273,3 @@ class WalletServiceTest {
         assertEquals(0, result.size());
     }
 }
-
